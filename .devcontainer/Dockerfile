@@ -14,4 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use flake
+FROM registry.fedoraproject.org/fedora-toolbox:40
+RUN dnf install -y \
+    --repofrompath 'terra,https://repos.fyralabs.com/terra$releasever' \
+    --setopt='terra.gpgkey=https://repos.fyralabs.com/terra$releasever/key.asc' \
+    terra-release
+RUN dnf copr enable -y mczernek/vale
+RUN dnf install -y gdb limine qemu vale xorriso zig
+RUN useradd -m developer
+USER developer

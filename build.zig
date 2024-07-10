@@ -67,7 +67,7 @@ pub fn build(b: *std.Build) void {
     const initrd_step = b.step("initrd", "Build the initial ramdisk");
     initrd_step.dependOn(&initrd_artifact.step);
 
-    const limine_data = std.posix.getenv("LIMINE_DATA").?;
+    const limine_data = "/usr/share/limine";
     const limine_bios_cd = b.fmt("{s}/limine-bios-cd.bin", .{limine_data});
     const limine_bios_sys = b.fmt("{s}/limine-bios.sys", .{limine_data});
     const limine_config = b.path("src/bootloader/limine.cfg");
@@ -147,9 +147,8 @@ pub fn build(b: *std.Build) void {
         run_cmd.addArg("-S");
     }
     if (uefi) {
-        const ovmf_fd = std.posix.getenv("OVMF_FD").?;
         run_cmd.addArg("-bios");
-        run_cmd.addArg(ovmf_fd);
+        run_cmd.addArg("/usr/share/OVMF/OVMF_CODE.fd");
     }
 
     const run_step = b.step("run", "Run the operating system");
@@ -184,11 +183,7 @@ pub fn build(b: *std.Build) void {
     format_zig_cmd.addArg("fmt");
     format_zig_cmd.addArg(".");
 
-    const format_nix_cmd = b.addSystemCommand(&.{"nix"});
-    format_nix_cmd.addArg("fmt");
-
     const format_step = b.step("format", "Format the source code");
-    format_step.dependOn(&format_nix_cmd.step);
     format_step.dependOn(&format_zig_cmd.step);
 
     b.default_step = iso_step;

@@ -24,7 +24,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@main
       - name: Build ISO Image
-        run: nix develop --command zig build iso
+        uses: devcontainers/ci@v0.3
+        with:
+          push: never
+          runCmd: zig build iso

@@ -1,0 +1,20 @@
+{
+    "name": "NeurOS",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "containerEnv": {
+        "HOME": "/home/developer"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ziglang.vscode-zig"
+            ]
+        }
+    },
+    "runArgs": [
+        "--security-opt=label=disable",
+        "--userns=keep-id"
+    ]
+}
