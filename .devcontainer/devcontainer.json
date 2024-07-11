@@ -13,8 +13,7 @@
             ]
         }
     },
-    "runArgs": [
-        "--security-opt=label=disable",
-        "--userns=keep-id"
+    "securityOpt": [
+        "label=disable"
     ]
 }
