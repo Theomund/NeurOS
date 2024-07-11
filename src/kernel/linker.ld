@@ -23,15 +23,16 @@ ENTRY(_start)
 
 PHDRS
 {
-    text    PT_LOAD    FLAGS(0x05);
-    rodata  PT_LOAD    FLAGS(0x04);
-    data    PT_LOAD    FLAGS(0x06);
-    dynamic PT_DYNAMIC FLAGS(0x06);
+    headers PT_PHDR PHDRS;
+    text    PT_LOAD FILEHDR PHDRS;
+    rodata  PT_LOAD;
+    data    PT_LOAD;
+    dynamic PT_DYNAMIC;
 }
 
 SECTIONS
 {
-    . = 0xffffffff80000000;
+    . = 0xffffffff80000000 + SIZEOF_HEADERS;
 
     .text : {
         *(.text .text.*)
