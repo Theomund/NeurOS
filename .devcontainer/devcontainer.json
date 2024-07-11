@@ -9,6 +9,7 @@
     "customizations": {
         "vscode": {
             "extensions": [
+                "ms-azuretools.vscode-docker",
                 "ziglang.vscode-zig"
             ]
         }
