@@ -28,5 +28,6 @@ RUN dnf install -y \
        xorriso \
        zig \
     && dnf clean all
+RUN wget -qO- https://github.com/zigtools/zls/releases/download/0.13.0/zls-x86_64-linux.tar.xz | tar -xJ -C /usr/local/bin zls
 RUN useradd -m developer
 USER developer
