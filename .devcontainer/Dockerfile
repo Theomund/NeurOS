@@ -15,11 +15,18 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 FROM registry.fedoraproject.org/fedora-toolbox:40
+RUN dnf copr enable -y mczernek/vale
 RUN dnf install -y \
     --repofrompath 'terra,https://repos.fyralabs.com/terra$releasever' \
     --setopt='terra.gpgkey=https://repos.fyralabs.com/terra$releasever/key.asc' \
-    terra-release
-RUN dnf copr enable -y mczernek/vale
-RUN dnf install -y gdb limine qemu vale xorriso zig
+    terra-release \ 
+    && dnf install -y \ 
+       gdb \ 
+       limine \
+       qemu-system-x86 \
+       vale \
+       xorriso \
+       zig \
+    && dnf clean all
 RUN useradd -m developer
 USER developer
