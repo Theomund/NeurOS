@@ -15,6 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 const limine = @import("limine");
+const std = @import("std");
+
+const Log = std.log.scoped(.vga);
 
 pub export var framebuffer_request: limine.FramebufferRequest = .{};
 
@@ -31,5 +34,7 @@ pub fn init() void {
 
             @as(*u32, @ptrCast(@alignCast(framebuffer.address + pixel_offset))).* = 0xFFFFFFFF;
         }
+
+        Log.info("Initialized the VGA subsystem.", .{});
     }
 }
