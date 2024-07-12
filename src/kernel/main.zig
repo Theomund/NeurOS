@@ -42,13 +42,14 @@ export fn _start() callconv(.C) noreturn {
     }
 
     serial.init();
-    shell.init();
     vga.init();
     memory.init();
     smp.init();
     initrd.init();
 
     Log.info("The operating system has been successfully initialized.", .{});
+
+    shell.init();
 
     done();
 }

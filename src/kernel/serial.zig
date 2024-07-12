@@ -17,7 +17,10 @@
 const std = @import("std");
 
 const Context = struct {};
+const Log = std.log.scoped(.serial);
+const ReadError = error{};
 const WriteError = error{};
+pub const Reader = std.io.GenericReader(Context, ReadError, read);
 pub const Writer = std.io.GenericWriter(Context, WriteError, write);
 
 const port = 0x3f8;
@@ -38,6 +41,8 @@ pub fn init() void {
     }
 
     outb(port + 4, 0x0F);
+
+    Log.info("Initialized the serial console subsystem.", .{});
 }
 
 fn inb(address: u16) u8 {
@@ -59,7 +64,7 @@ fn received() u8 {
     return inb(port + 5) & 1;
 }
 
-fn read() u8 {
+fn getchar() u8 {
     while (received() == 0) {}
     return inb(port);
 }
@@ -71,6 +76,12 @@ fn transmitEmpty() u8 {
 fn putc(character: u8) void {
     while (transmitEmpty() == 0) {}
     outb(port, character);
+}
+
+fn read(context: Context, buffer: []u8) ReadError!usize {
+    _ = context;
+    buffer[0] = getchar();
+    return 1;
 }
 
 fn write(context: Context, bytes: []const u8) WriteError!usize {

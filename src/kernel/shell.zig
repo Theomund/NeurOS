@@ -19,5 +19,22 @@ const serial = @import("serial.zig");
 
 pub fn init() void {
     const writer = serial.Writer{ .context = .{} };
-    try writer.print("{s}{s}NeurOS v0.1.0 (x86_64)\r\n{s}Copyright (C) 2024 Theomund{s}{s}\r\n\n", .{ ansi.bold, ansi.red, ansi.blue, ansi.normal, ansi.default });
+    const motd = "\n{s}{s}NeurOS v0.1.0 (x86_64)\r\n{s}Copyright (C) 2024 Theomund{s}{s}\n";
+    const prompt = "\r\n{s}[{s}root@localhost{s} ~{s}]# ";
+
+    try writer.print(motd, .{ ansi.bold, ansi.red, ansi.blue, ansi.normal, ansi.default });
+    try writer.print(prompt, .{ ansi.bold, ansi.green, ansi.blue, ansi.default });
+
+    const reader = serial.Reader{ .context = .{} };
+    while (true) {
+        const byte = reader.readByte() catch |err| switch (err) {
+            error.EndOfStream => break,
+            else => |e| return e,
+        };
+        switch (byte) {
+            '\x08' => try writer.print("\x08 \x08", .{}),
+            '\r' => try writer.print(prompt, .{ ansi.bold, ansi.green, ansi.blue, ansi.default }),
+            else => try writer.writeByte(byte),
+        }
+    }
 }
