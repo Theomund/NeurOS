@@ -172,34 +172,12 @@ If you're interested in developing the operating system, follow the outlined
 steps. Make sure you have the necessary tools and dependencies installed on your
 system.
 
-## Prerequisites
-
-Before developing, ensure you have Nix installed on your host operating system:
-
-```bash
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
-```
-
 ## Cloning
-
-Spawn an interactive shell that contains the `git` package:
-
-```bash
-nix-shell -p git
-```
 
 Clone the repository to your local machine by using the following command:
 
 ```bash
 git clone https://github.com/Theomund/NeurOS.git
-```
-
-## Developing
-
-To instantiate a development shell, run the following command:
-
-```bash
-nix develop
 ```
 
 ## Compiling
