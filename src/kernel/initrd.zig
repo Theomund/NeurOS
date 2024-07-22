@@ -51,9 +51,19 @@ pub fn init() void {
         Log.debug("Detected initial RAM disk module with {s} as its path ({d} bytes).", .{ initrd.path, initrd.size });
         const address = initrd.address;
         const header = std.mem.bytesToValue(Header, address);
-        Log.debug("{s} {s}/{s} {s} {s} {s}", .{ header.mode, header.username, header.group, header.size, header.mtime, header.name });
+        const size = parseOctal(&header.size);
+        Log.debug("{s} {s}/{s} {d} {s} {s}", .{ header.mode, header.username, header.group, size, header.mtime, header.name });
         Log.info("Initialized the initial RAM disk (initrd) subsystem.", .{});
     } else {
         Log.err("Failed to initialize the initial RAM disk (initrd) subsystem.", .{});
     }
+}
+
+fn parseOctal(raw: []const u8) u64 {
+    const left_trimmed = std.mem.trimLeft(u8, raw, "0");
+    const right_trimmed = std.mem.trimRight(u8, left_trimmed, "\x00");
+    if (right_trimmed.len == 0) {
+        return 0;
+    }
+    return std.fmt.parseInt(u64, right_trimmed, 8) catch unreachable;
 }
