@@ -27,6 +27,6 @@ pub fn init() void {
         Log.debug("Detected {d} core(s) in the CPU processor.", .{count});
         Log.info("Initialized the SMP subsystem.", .{});
     } else {
-        Log.err("Failed to initialize SMP subsystem.", .{});
+        Log.err("Failed to initialize the SMP subsystem.", .{});
     }
 }
