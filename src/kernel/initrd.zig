@@ -48,7 +48,7 @@ const File = struct {
 pub fn init() void {
     if (module_request.response) |module_response| {
         const initrd = module_response.modules()[0];
-        Log.debug("Detected initial RAM disk module with {s} as its path.", .{initrd.path});
+        Log.debug("Detected initial RAM disk module with {s} as its path ({d} bytes).", .{ initrd.path, initrd.size });
         Log.info("Initialized the initial RAM disk (initrd) subsystem.", .{});
     }
 }
