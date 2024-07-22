@@ -53,5 +53,7 @@ pub fn init() void {
         const header = std.mem.bytesToValue(Header, address);
         Log.debug("{s} {s}/{s} {s} {s} {s}", .{ header.mode, header.username, header.group, header.size, header.mtime, header.name });
         Log.info("Initialized the initial RAM disk (initrd) subsystem.", .{});
+    } else {
+        Log.err("Failed to initialize the initial RAM disk (initrd) subsystem.", .{});
     }
 }

@@ -36,5 +36,7 @@ pub fn init() void {
         }
         Log.debug("Detected {d} usable memory map entries.", .{usable});
         Log.info("Initialized the memory subsystem.", .{});
+    } else {
+        Log.err("Failed to initialize the memory subsystem.", .{});
     }
 }

@@ -26,5 +26,7 @@ pub fn init() void {
         const count = smp_response.cpu_count;
         Log.debug("Detected {d} core(s) in the CPU processor.", .{count});
         Log.info("Initialized the SMP subsystem.", .{});
+    } else {
+        Log.err("Failed to initialize SMP subsystem.", .{});
     }
 }

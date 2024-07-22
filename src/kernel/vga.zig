@@ -36,5 +36,7 @@ pub fn init() void {
         }
 
         Log.info("Initialized the VGA subsystem.", .{});
+    } else {
+        Log.err("Failed to initialize the VGA subsytem.", .{});
     }
 }
