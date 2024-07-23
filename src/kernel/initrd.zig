@@ -42,7 +42,7 @@ const Header = struct {
 
 const File = struct {
     header: Header,
-    data: *const u8,
+    data: []u8,
 };
 
 const block_size = 512;
@@ -52,21 +52,27 @@ pub fn init() void {
         const initrd = module_response.modules()[0];
         Log.debug("Detected initial RAM disk module with {s} as its path ({d} bytes).", .{ initrd.path, initrd.size });
         var address = initrd.address;
-        while (true) {
-            const header = std.mem.bytesToValue(Header, address);
-            if (!std.mem.eql(u8, &header.indicator, "ustar\x00")) {
-                break;
-            }
-            const size = parseOctal(&header.size);
-            const data = address[block_size .. block_size + size];
-            Log.debug("{s} {s}/{s} {d} {s} {s}", .{ header.mode, header.username, header.group, size, header.mtime, header.name });
-            Log.debug("{d}", .{data});
+        while (parseFile(address)) |file| {
+            const size = parseOctal(&file.header.size);
+            Log.debug("{s} {s}/{s} {d} {s} {s}", .{ file.header.mode, file.header.username, file.header.group, size, file.header.mtime, file.header.name });
             address += block_size + block_size * (std.math.divCeil(u64, size, block_size) catch unreachable);
+        } else |_| {
+            Log.debug("Finished parsing the initial RAM disk.", .{});
         }
         Log.info("Initialized the initial RAM disk (initrd) subsystem.", .{});
     } else {
         Log.err("Failed to initialize the initial RAM disk (initrd) subsystem.", .{});
     }
+}
+
+fn parseFile(address: [*]u8) !File {
+    const header = std.mem.bytesToValue(Header, address);
+    if (!std.mem.eql(u8, &header.indicator, "ustar\x00")) {
+        return error.InvalidFile;
+    }
+    const size = parseOctal(&header.size);
+    const data = address[block_size .. block_size + size];
+    return File{ .header = header, .data = data };
 }
 
 fn parseOctal(raw: []const u8) u64 {
