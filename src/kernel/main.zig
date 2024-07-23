@@ -43,7 +43,9 @@ export fn _start() callconv(.C) noreturn {
 
     serial.init();
     vga.init();
-    memory.init();
+    memory.init() catch |err| {
+        Log.err("Failed to initialize the memory subsystem ({}).", .{err});
+    };
     smp.init();
     initrd.init();
 

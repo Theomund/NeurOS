@@ -23,10 +23,17 @@ const Log = std.log.scoped(.memory);
 pub export var memory_map_request: limine.MemoryMapRequest = .{};
 pub export var stack_size_request: limine.StackSizeRequest = .{ .stack_size = 10485760 };
 
-pub fn init() void {
+pub fn init() !void {
+    try parseMap();
+    try expandStack();
+    Log.info("Initialized the memory subsystem.", .{});
+}
+
+fn parseMap() !void {
     if (memory_map_request.response) |memory_map_response| {
         const count = memory_map_response.entry_count;
         Log.debug("Detected {d} entries in the memory map.", .{count});
+
         const entries = memory_map_response.entries();
         var usable: u32 = 0;
         for (entries) |entry| {
@@ -35,14 +42,19 @@ pub fn init() void {
                 usable += 1;
             }
         }
-        if (stack_size_request.response) |_| {
-            Log.debug("Expanded the kernel stack space to {d} bytes.", .{stack_size_request.stack_size});
-        } else {
-            Log.err("Failed to expand the kernel stack.", .{});
-        }
+
         Log.debug("Detected {d} usable memory map entries.", .{usable});
-        Log.info("Initialized the memory subsystem.", .{});
     } else {
-        Log.err("Failed to initialize the memory subsystem.", .{});
+        Log.err("Failed to parse the memory map.", .{});
+        return error.ParsingError;
+    }
+}
+
+pub fn expandStack() !void {
+    if (stack_size_request.response) |_| {
+        Log.debug("Expanded the kernel stack space to {d} bytes.", .{stack_size_request.stack_size});
+    } else {
+        Log.err("Failed to expand the kernel stack.", .{});
+        return error.StackError;
     }
 }
