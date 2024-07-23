@@ -21,6 +21,7 @@ const std = @import("std");
 const Log = std.log.scoped(.memory);
 
 pub export var memory_map_request: limine.MemoryMapRequest = .{};
+pub export var stack_size_request: limine.StackSizeRequest = .{ .stack_size = 10485760 };
 
 pub fn init() void {
     if (memory_map_request.response) |memory_map_response| {
@@ -33,6 +34,11 @@ pub fn init() void {
             if (entry.kind == limine.MemoryMapEntryType.usable) {
                 usable += 1;
             }
+        }
+        if (stack_size_request.response) |_| {
+            Log.debug("Expanded the kernel stack space to {d} bytes.", .{stack_size_request.stack_size});
+        } else {
+            Log.err("Failed to expand the kernel stack.", .{});
         }
         Log.debug("Detected {d} usable memory map entries.", .{usable});
         Log.info("Initialized the memory subsystem.", .{});
