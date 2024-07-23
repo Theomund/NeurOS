@@ -45,14 +45,24 @@ const File = struct {
     data: *const u8,
 };
 
+const block_size = 512;
+
 pub fn init() void {
     if (module_request.response) |module_response| {
         const initrd = module_response.modules()[0];
         Log.debug("Detected initial RAM disk module with {s} as its path ({d} bytes).", .{ initrd.path, initrd.size });
-        const address = initrd.address;
-        const header = std.mem.bytesToValue(Header, address);
-        const size = parseOctal(&header.size);
-        Log.debug("{s} {s}/{s} {d} {s} {s}", .{ header.mode, header.username, header.group, size, header.mtime, header.name });
+        var address = initrd.address;
+        while (true) {
+            const header = std.mem.bytesToValue(Header, address);
+            if (!std.mem.eql(u8, &header.indicator, "ustar\x00")) {
+                break;
+            }
+            const size = parseOctal(&header.size);
+            const data = address[block_size .. block_size + size];
+            Log.debug("{s} {s}/{s} {d} {s} {s}", .{ header.mode, header.username, header.group, size, header.mtime, header.name });
+            Log.debug("{d}", .{data});
+            address += block_size + block_size * (std.math.divCeil(u64, size, block_size) catch unreachable);
+        }
         Log.info("Initialized the initial RAM disk (initrd) subsystem.", .{});
     } else {
         Log.err("Failed to initialize the initial RAM disk (initrd) subsystem.", .{});
