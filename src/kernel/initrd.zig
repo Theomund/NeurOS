@@ -42,7 +42,7 @@ const Header = struct {
 
 const File = struct {
     header: Header,
-    data: []u8,
+    data: []const u8,
 };
 
 const block_size = 512;
