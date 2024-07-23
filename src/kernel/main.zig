@@ -44,10 +44,12 @@ export fn _start() callconv(.C) noreturn {
     serial.init();
     vga.init();
     memory.init() catch |err| {
-        Log.err("Failed to initialize the memory subsystem ({}).", .{err});
+        Log.err("Failed to initialize the memory subsystem [{}].", .{err});
     };
     smp.init();
-    initrd.init();
+    initrd.init() catch |err| {
+        Log.err("Failed to initialize the initial RAM disk (initrd) subsystem [{}].", .{err});
+    };
 
     Log.info("The operating system has been successfully initialized.", .{});
 

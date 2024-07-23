@@ -47,39 +47,50 @@ const File = struct {
 
 const block_size = 512;
 
-pub fn init() void {
+pub fn init() !void {
+    try parseModule();
+    Log.info("Initialized the initial RAM disk (initrd) subsystem.", .{});
+}
+
+fn parseModule() !void {
     if (module_request.response) |module_response| {
         const initrd = module_response.modules()[0];
         Log.debug("Detected initial RAM disk module with {s} as its path ({d} bytes).", .{ initrd.path, initrd.size });
+
         var address = initrd.address;
         while (parseFile(address)) |file| {
-            const size = parseOctal(&file.header.size);
+            const size = try parseOctal(&file.header.size);
             Log.debug("{s} {s}/{s} {d} {s} {s}", .{ file.header.mode, file.header.username, file.header.group, size, file.header.mtime, file.header.name });
-            address += block_size + block_size * (std.math.divCeil(u64, size, block_size) catch unreachable);
+            address += block_size + block_size * try std.math.divCeil(u64, size, block_size);
         } else |_| {
             Log.debug("Finished parsing the initial RAM disk.", .{});
         }
-        Log.info("Initialized the initial RAM disk (initrd) subsystem.", .{});
     } else {
-        Log.err("Failed to initialize the initial RAM disk (initrd) subsystem.", .{});
+        Log.err("Failed to retrieve a module response.", .{});
+        return error.MissingModule;
     }
 }
 
 fn parseFile(address: [*]u8) !File {
     const header = std.mem.bytesToValue(Header, address);
+
     if (!std.mem.eql(u8, &header.indicator, "ustar\x00")) {
         return error.InvalidFile;
     }
-    const size = parseOctal(&header.size);
+
+    const size = try parseOctal(&header.size);
     const data = address[block_size .. block_size + size];
+
     return File{ .header = header, .data = data };
 }
 
-fn parseOctal(raw: []const u8) u64 {
+fn parseOctal(raw: []const u8) !u64 {
     const left_trimmed = std.mem.trimLeft(u8, raw, "0");
     const right_trimmed = std.mem.trimRight(u8, left_trimmed, "\x00");
+
     if (right_trimmed.len == 0) {
         return 0;
     }
-    return std.fmt.parseInt(u64, right_trimmed, 8) catch unreachable;
+
+    return std.fmt.parseInt(u64, right_trimmed, 8);
 }
