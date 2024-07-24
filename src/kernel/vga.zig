@@ -21,12 +21,13 @@ const Log = std.log.scoped(.vga);
 
 pub export var framebuffer_request: limine.FramebufferRequest = .{};
 
-pub fn init() void {
-    if (framebuffer_request.response) |framebuffer_response| {
-        if (framebuffer_response.framebuffer_count < 1) {
-            @panic("Failed to retrieve framebuffer.");
-        }
+pub fn init() !void {
+    try setupFramebuffer();
+    Log.info("Initialized the VGA subsystem.", .{});
+}
 
+fn setupFramebuffer() !void {
+    if (framebuffer_request.response) |framebuffer_response| {
         const framebuffer = framebuffer_response.framebuffers()[0];
 
         for (0..100) |i| {
@@ -34,9 +35,8 @@ pub fn init() void {
 
             @as(*u32, @ptrCast(@alignCast(framebuffer.address + pixel_offset))).* = 0xFFFFFFFF;
         }
-
-        Log.info("Initialized the VGA subsystem.", .{});
     } else {
-        Log.err("Failed to initialize the VGA subsystem.", .{});
+        Log.err("Failed to retrieve a framebuffer response.", .{});
+        return error.MissingFramebuffer;
     }
 }
