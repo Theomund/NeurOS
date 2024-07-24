@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+const gdt = @import("gdt.zig");
 const initrd = @import("initrd.zig");
+const interrupts = @import("interrupts.zig");
 const limine = @import("limine");
 const logger = @import("logger.zig");
 const memory = @import("memory.zig");
@@ -41,6 +43,8 @@ export fn _start() callconv(.C) noreturn {
         @panic("Failed to use base revision.");
     }
 
+    gdt.init();
+    interrupts.init();
     serial.init();
     vga.init() catch |err| {
         Log.err("Failed to initialize the VGA subsystem [{}].", .{err});
