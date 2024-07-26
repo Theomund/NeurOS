@@ -67,8 +67,9 @@ fn parseModule() !void {
 
         var address = initrd.address;
         while (parseFile(address)) |file| {
+            const mode = try parseMode(&file.header.mode);
             const size = try parseOctal(&file.header.size);
-            Log.debug("{s} {s}/{s} {d} {s} {s}", .{ file.header.mode, file.header.username, file.header.group, size, file.header.mtime, file.header.name });
+            Log.debug("{s} {s}/{s} {d} {s} {s}", .{ mode, file.header.username, file.header.group, size, file.header.mtime, file.header.name });
 
             try files.append(file);
 
@@ -80,6 +81,33 @@ fn parseModule() !void {
         Log.err("Failed to retrieve a module response.", .{});
         return error.MissingModule;
     }
+}
+
+fn parseMode(mode: []const u8) ![9]u8 {
+    var buffer: [9]u8 = undefined;
+
+    const left_trimmed = std.mem.trimLeft(u8, mode, "0");
+    const right_trimmed = std.mem.trimRight(u8, left_trimmed, "\x00");
+
+    for (0..3, right_trimmed) |i, digit| {
+        const symbol = switch (digit) {
+            '0' => "---",
+            '1' => "--x",
+            '2' => "-w-",
+            '3' => "-wx",
+            '4' => "r--",
+            '5' => "r-x",
+            '6' => "rw-",
+            '7' => "rwx",
+            else => return error.InvalidDigit,
+        };
+
+        buffer[i * 3] = symbol[0];
+        buffer[i * 3 + 1] = symbol[1];
+        buffer[i * 3 + 2] = symbol[2];
+    }
+
+    return buffer;
 }
 
 fn parseFile(address: [*]u8) !File {
