@@ -21,12 +21,17 @@ const Log = std.log.scoped(.smp);
 
 pub export var smp_request: limine.SmpRequest = .{};
 
-pub fn init() void {
+pub fn init() !void {
+    try getCoreCount();
+    Log.info("Initialized the SMP subsystem.", .{});
+}
+
+fn getCoreCount() !void {
     if (smp_request.response) |smp_response| {
         const count = smp_response.cpu_count;
         Log.debug("Detected {d} core(s) in the CPU processor.", .{count});
-        Log.info("Initialized the SMP subsystem.", .{});
     } else {
-        Log.err("Failed to initialize the SMP subsystem.", .{});
+        Log.err("Failed to retrieve SMP response.", .{});
+        return error.MissingResponse;
     }
 }
