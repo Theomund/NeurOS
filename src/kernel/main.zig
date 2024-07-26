@@ -46,15 +46,19 @@ export fn _start() callconv(.C) noreturn {
     gdt.init();
     interrupts.init();
     serial.init();
+
     vga.init() catch |err| {
         Log.err("Failed to initialize the VGA subsystem [{}].", .{err});
     };
+
     memory.init() catch |err| {
         Log.err("Failed to initialize the memory subsystem [{}].", .{err});
     };
+
     smp.init() catch |err| {
         Log.err("Failed to initialize the SMP subsystem [{}].", .{err});
     };
+
     initrd.init() catch |err| {
         Log.err("Failed to initialize the initial RAM disk (initrd) subsystem [{}].", .{err});
     };

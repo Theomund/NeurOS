@@ -47,6 +47,8 @@ const File = struct {
 
 const block_size = 512;
 
+var files: std.ArrayList(File) = undefined;
+
 pub fn init() !void {
     try parseModule();
     Log.info("Initialized the initial RAM disk (initrd) subsystem.", .{});
@@ -57,13 +59,22 @@ fn parseModule() !void {
         const initrd = module_response.modules()[0];
         Log.debug("Detected initial RAM disk module with {s} as its path ({d} bytes).", .{ initrd.path, initrd.size });
 
+        var buffer: [1048576]u8 = undefined;
+        var fba = std.heap.FixedBufferAllocator.init(&buffer);
+        const allocator = fba.allocator();
+
+        files = std.ArrayList(File).init(allocator);
+
         var address = initrd.address;
         while (parseFile(address)) |file| {
             const size = try parseOctal(&file.header.size);
             Log.debug("{s} {s}/{s} {d} {s} {s}", .{ file.header.mode, file.header.username, file.header.group, size, file.header.mtime, file.header.name });
+
+            try files.append(file);
+
             address += block_size + block_size * try std.math.divCeil(u64, size, block_size);
         } else |_| {
-            Log.debug("Finished parsing the initial RAM disk.", .{});
+            Log.debug("Finished parsing {d} files from the initial RAM disk.", .{files.items.len});
         }
     } else {
         Log.err("Failed to retrieve a module response.", .{});
@@ -93,4 +104,13 @@ fn parseOctal(raw: []const u8) !u64 {
     }
 
     return std.fmt.parseInt(u64, right_trimmed, 8);
+}
+
+pub fn read(path: []const u8) ![]const u8 {
+    for (files.items) |file| {
+        if (std.mem.eql(u8, &file.header.name, path)) {
+            return file.data;
+        }
+    }
+    return error.FileNotFound;
 }

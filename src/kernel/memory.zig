@@ -50,7 +50,7 @@ fn parseMap() !void {
     }
 }
 
-pub fn expandStack() !void {
+fn expandStack() !void {
     if (stack_size_request.response) |_| {
         Log.debug("Expanded the kernel stack space to {d} bytes.", .{stack_size_request.stack_size});
     } else {
