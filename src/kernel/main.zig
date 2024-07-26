@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+const font = @import("font.zig");
 const gdt = @import("gdt.zig");
 const initrd = @import("initrd.zig");
 const interrupts = @import("interrupts.zig");
@@ -47,10 +48,6 @@ export fn _start() callconv(.C) noreturn {
     interrupts.init();
     serial.init();
 
-    vga.init() catch |err| {
-        Log.err("Failed to initialize the VGA subsystem [{}].", .{err});
-    };
-
     memory.init() catch |err| {
         Log.err("Failed to initialize the memory subsystem [{}].", .{err});
     };
@@ -61,6 +58,14 @@ export fn _start() callconv(.C) noreturn {
 
     initrd.init() catch |err| {
         Log.err("Failed to initialize the initial RAM disk (initrd) subsystem [{}].", .{err});
+    };
+
+    font.init() catch |err| {
+        Log.err("Failed to initialize the font subsystem [{}].", .{err});
+    };
+
+    vga.init() catch |err| {
+        Log.err("Failed to initialize the VGA subsystem [{}].", .{err});
     };
 
     Log.info("The operating system has been successfully initialized.", .{});
