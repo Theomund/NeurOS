@@ -108,7 +108,9 @@ fn parseOctal(raw: []const u8) !u64 {
 
 pub fn read(path: []const u8) ![]const u8 {
     for (files.items) |file| {
-        if (std.mem.eql(u8, &file.header.name, path)) {
+        const name = std.mem.trimRight(u8, &file.header.name, "\x00");
+
+        if (std.mem.eql(u8, name, path)) {
             return file.data;
         }
     }

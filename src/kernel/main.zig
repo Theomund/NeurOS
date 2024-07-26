@@ -65,7 +65,9 @@ export fn _start() callconv(.C) noreturn {
 
     Log.info("The operating system has been successfully initialized.", .{});
 
-    shell.init();
+    shell.init() catch |err| {
+        Log.err("Failed to initialize the shell subsystem [{}].", .{err});
+    };
 
     done();
 }

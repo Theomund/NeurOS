@@ -15,15 +15,17 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 const ansi = @import("ansi.zig");
+const initrd = @import("initrd.zig");
 const serial = @import("serial.zig");
+const std = @import("std");
 
-pub fn init() void {
+pub fn init() !void {
     const writer = serial.Writer{ .context = .{} };
-    const motd = "\n{s}{s}NeurOS v0.1.0 (x86_64)\r\n{s}Copyright (C) 2024 Theomund{s}{s}\n";
-    const prompt = "\r\n{s}[{s}root@localhost{s} ~{s}]# ";
+    const motd = try initrd.read("./etc/motd");
+    const prompt = try parsePrompt();
 
-    try writer.print(motd, .{ ansi.bold, ansi.red, ansi.blue, ansi.normal, ansi.default });
-    try writer.print(prompt, .{ ansi.bold, ansi.green, ansi.blue, ansi.default });
+    try writer.print("\n{s}", .{motd});
+    try writer.print("\n{s}", .{prompt});
 
     const reader = serial.Reader{ .context = .{} };
     while (true) {
@@ -33,8 +35,24 @@ pub fn init() void {
         };
         switch (byte) {
             '\x08' => try writer.print("\x08 \x08", .{}),
-            '\r' => try writer.print(prompt, .{ ansi.bold, ansi.green, ansi.blue, ansi.default }),
+            '\r' => try writer.print("\n{s}", .{prompt}),
             else => try writer.writeByte(byte),
         }
     }
+}
+
+fn parsePrompt() ![]const u8 {
+    const profile = try initrd.read("./etc/profile");
+
+    const start_quote = std.mem.indexOf(u8, profile, "\"");
+    const end_quote = std.mem.lastIndexOf(u8, profile, "\"");
+
+    if (start_quote == null or end_quote == null) {
+        return error.MissingQuote;
+    }
+
+    const start_index = start_quote.? + 1;
+    const end_index = end_quote.?;
+
+    return profile[start_index..end_index];
 }

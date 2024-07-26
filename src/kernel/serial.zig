@@ -87,6 +87,9 @@ fn read(context: Context, buffer: []u8) ReadError!usize {
 fn write(context: Context, bytes: []const u8) WriteError!usize {
     _ = context;
     for (bytes) |byte| {
+        if (byte == '\n') {
+            putc('\r');
+        }
         putc(byte);
     }
     return bytes.len;
