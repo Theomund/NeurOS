@@ -29,14 +29,14 @@ pub fn init() !void {
 fn setupFramebuffer() !void {
     if (framebuffer_request.response) |framebuffer_response| {
         const framebuffer = framebuffer_response.framebuffers()[0];
-
-        for (0..100) |i| {
-            const pixel_offset = i * framebuffer.pitch + i * 4;
-
-            @as(*u32, @ptrCast(@alignCast(framebuffer.address + pixel_offset))).* = 0xFFFFFFFF;
-        }
+        drawPixel(100, 100, framebuffer.address, framebuffer.pitch, 0xFFFFFF);
     } else {
         Log.err("Failed to retrieve a framebuffer response.", .{});
         return error.MissingFramebuffer;
     }
+}
+
+fn drawPixel(x: u32, y: u32, address: [*]u8, pitch: u64, color: u32) void {
+    const offset = y * pitch + x * 4;
+    @as(*u32, @ptrCast(@alignCast(address + offset))).* = color;
 }
