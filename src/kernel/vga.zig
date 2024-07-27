@@ -78,12 +78,25 @@ fn drawCharacter(typeface: font.Font, character: u8, x: usize, y: usize, fg: u32
 fn write(context: Context, bytes: []const u8) WriteError!usize {
     const typeface = if (context.bold) try font.parse("./usr/share/fonts/ter-i16b.psf") else try font.parse("./usr/share/fonts/ter-i16n.psf");
     const width = typeface.header.glyph_size / 2;
+    const height = typeface.header.glyph_size;
 
     var x = context.x;
+    var y = context.y;
 
     for (bytes) |byte| {
-        try drawCharacter(typeface, byte, x, context.y, context.fg, context.bg);
-        x += width;
+        switch (byte) {
+            '\n' => {
+                x = context.x;
+                y += height;
+            },
+            '\r' => {
+                x = context.x;
+            },
+            else => {
+                try drawCharacter(typeface, byte, x, y, context.fg, context.bg);
+                x += width;
+            },
+        }
     }
 
     return bytes.len;
