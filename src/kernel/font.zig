@@ -25,21 +25,12 @@ const Header = struct {
     glyph_size: u8,
 };
 
-const Font = struct {
+pub const Font = struct {
     header: Header,
     data: []const u8,
 };
 
-var normal: Font = undefined;
-var bold: Font = undefined;
-
-pub fn init() !void {
-    normal = try parse("./usr/share/fonts/ter-i16n.psf");
-    bold = try parse("./usr/share/fonts/ter-i16b.psf");
-    Log.info("Initialized the font subsystem.", .{});
-}
-
-fn parse(path: []const u8) !Font {
+pub fn parse(path: []const u8) !Font {
     const psf = try initrd.read(path);
     const header = Header{
         .magic = std.mem.readInt(u16, psf[0..2], .little),

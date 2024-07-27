@@ -31,7 +31,7 @@ pub fn build(b: *std.Build) void {
     target.cpu_features_sub.addFeature(@intFromEnum(features.avx2));
     target.cpu_features_add.addFeature(@intFromEnum(features.soft_float));
 
-    const optimize = b.standardOptimizeOption(.{});
+    const optimize = b.standardOptimizeOption(.{ .preferred_optimize_mode = .Debug });
 
     const limine = b.dependency("limine", .{});
 

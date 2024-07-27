@@ -60,10 +60,6 @@ export fn _start() callconv(.C) noreturn {
         Log.err("Failed to initialize the initial RAM disk (initrd) subsystem [{}].", .{err});
     };
 
-    font.init() catch |err| {
-        Log.err("Failed to initialize the font subsystem [{}].", .{err});
-    };
-
     vga.init() catch |err| {
         Log.err("Failed to initialize the VGA subsystem [{}].", .{err});
     };
