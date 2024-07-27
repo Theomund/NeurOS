@@ -58,12 +58,12 @@ fn drawPixel(x: usize, y: usize, color: u32) void {
     @as(*u32, @ptrCast(@alignCast(framebuffer.address + offset))).* = color;
 }
 
-fn drawCharacter(typeface: font.Font, character: u8, x: usize, y: usize, fg: u32, bg: u32) void {
-    const width: usize = typeface.header.glyph_size / 2;
-    const height: usize = typeface.header.glyph_size;
+fn drawCharacter(face: font.Face, character: u8, x: usize, y: usize, fg: u32, bg: u32) void {
+    const width: usize = face.getWidth();
+    const height: usize = face.getHeight();
 
     const position: usize = character * height;
-    const glyph: []const u8 = typeface.data[position..];
+    const glyph: []const u8 = face.data[position..];
 
     const masks: [8]u8 = .{ 128, 64, 32, 16, 8, 4, 2, 1 };
 
@@ -76,9 +76,9 @@ fn drawCharacter(typeface: font.Font, character: u8, x: usize, y: usize, fg: u32
 }
 
 fn write(context: Context, bytes: []const u8) WriteError!usize {
-    const typeface = if (context.bold) try font.parse("./usr/share/fonts/ter-i16b.psf") else try font.parse("./usr/share/fonts/ter-i16n.psf");
-    const width = typeface.header.glyph_size / 2;
-    const height = typeface.header.glyph_size;
+    const face = if (context.bold) try font.Face.init("./usr/share/fonts/ter-i16b.psf") else try font.Face.init("./usr/share/fonts/ter-i16n.psf");
+    const width = face.getWidth();
+    const height = face.getHeight();
 
     var x = context.x;
     var y = context.y;
@@ -93,7 +93,7 @@ fn write(context: Context, bytes: []const u8) WriteError!usize {
                 x = context.x;
             },
             else => {
-                drawCharacter(typeface, byte, x, y, context.fg, context.bg);
+                drawCharacter(face, byte, x, y, context.fg, context.bg);
                 x += width;
             },
         }

@@ -25,23 +25,31 @@ const Header = struct {
     glyph_size: u8,
 };
 
-pub const Font = struct {
+pub const Face = struct {
     header: Header,
     data: []const u8,
-};
 
-pub fn parse(path: []const u8) !Font {
-    const psf = try initrd.read(path);
-    const header = Header{
-        .magic = std.mem.readInt(u16, psf[0..2], .little),
-        .font_mode = psf[2],
-        .glyph_size = psf[3],
-    };
-    const data = psf[4..4100];
-    const font = Font{
-        .header = header,
-        .data = data,
-    };
-    Log.debug("Parsed font with path {s}.", .{path});
-    return font;
-}
+    pub fn init(path: []const u8) !Face {
+        const psf = try initrd.read(path);
+        const header = Header{
+            .magic = std.mem.readInt(u16, psf[0..2], .little),
+            .font_mode = psf[2],
+            .glyph_size = psf[3],
+        };
+        const data = psf[4..4100];
+        const font = Face{
+            .header = header,
+            .data = data,
+        };
+        Log.debug("Parsed font face with path {s}.", .{path});
+        return font;
+    }
+
+    pub fn getWidth(self: Face) usize {
+        return self.header.glyph_size / 2;
+    }
+
+    pub fn getHeight(self: Face) usize {
+        return self.header.glyph_size;
+    }
+};
