@@ -16,81 +16,107 @@
 
 const std = @import("std");
 
-const Context = struct {};
 const Log = std.log.scoped(.serial);
-const ReadError = error{};
-const WriteError = error{};
-pub const Reader = std.io.GenericReader(Context, ReadError, read);
-pub const Writer = std.io.GenericWriter(Context, WriteError, write);
 
-const port = 0x3f8;
+const IO = enum(u16) {
+    COM1 = 0x3F8,
+    COM2 = 0x2F8,
+    COM3 = 0x3E8,
+    COM4 = 0x2E8,
+    COM5 = 0x5F8,
+    COM6 = 0x4F8,
+    COM7 = 0x5E8,
+    COM8 = 0x4E8,
+};
+
+pub const Port = struct {
+    address: u16,
+
+    const Reader = std.io.GenericReader(Port, error{}, read);
+    const Writer = std.io.GenericWriter(Port, error{}, write);
+
+    pub fn init(port: IO) Port {
+        const address: u16 = @intFromEnum(port);
+
+        outb(address + 1, 0x00);
+        outb(address + 3, 0x80);
+        outb(address + 0, 0x03);
+        outb(address + 1, 0x00);
+        outb(address + 3, 0x03);
+        outb(address + 2, 0xC7);
+        outb(address + 4, 0x0B);
+        outb(address + 4, 0x1E);
+        outb(address + 0, 0xAE);
+
+        if (inb(address + 0) != 0xAE) {
+            @panic("Failed to initialize serial port.");
+        }
+
+        outb(address + 4, 0x0F);
+
+        return .{ .address = address };
+    }
+
+    fn inb(address: u16) u8 {
+        return asm volatile ("inb %[address], %[value]"
+            : [value] "={al}" (-> u8),
+            : [address] "N{dx}" (address),
+        );
+    }
+
+    fn outb(address: u16, value: u8) void {
+        asm volatile ("outb %[value], %[address]"
+            :
+            : [address] "{dx}" (address),
+              [value] "{al}" (value),
+        );
+    }
+
+    fn received(self: Port) u8 {
+        return inb(self.address + 5) & 1;
+    }
+
+    fn getCharacter(self: Port) u8 {
+        while (self.received() == 0) {}
+        return inb(self.address);
+    }
+
+    fn transmitEmpty(self: Port) u8 {
+        return inb(self.address + 5) & 0x20;
+    }
+
+    fn putCharacter(self: Port, character: u8) void {
+        while (self.transmitEmpty() == 0) {}
+        outb(self.address, character);
+    }
+
+    fn read(self: Port, buffer: []u8) !usize {
+        buffer[0] = self.getCharacter();
+        return 1;
+    }
+
+    fn write(self: Port, bytes: []const u8) !usize {
+        for (bytes) |byte| {
+            if (byte == '\n') {
+                self.putCharacter('\r');
+            }
+            self.putCharacter(byte);
+        }
+        return bytes.len;
+    }
+
+    pub fn reader(self: Port) Reader {
+        return .{ .context = self };
+    }
+
+    pub fn writer(self: Port) Writer {
+        return .{ .context = self };
+    }
+};
+
+pub var COM1: Port = undefined;
 
 pub fn init() void {
-    outb(port + 1, 0x00);
-    outb(port + 3, 0x80);
-    outb(port + 0, 0x03);
-    outb(port + 1, 0x00);
-    outb(port + 3, 0x03);
-    outb(port + 2, 0xC7);
-    outb(port + 4, 0x0B);
-    outb(port + 4, 0x1E);
-    outb(port + 0, 0xAE);
-
-    if (inb(port + 0) != 0xAE) {
-        @panic("Failed to initialize serial port.");
-    }
-
-    outb(port + 4, 0x0F);
-
+    COM1 = Port.init(IO.COM1);
     Log.info("Initialized the serial console subsystem.", .{});
-}
-
-fn inb(address: u16) u8 {
-    return asm volatile ("inb %[address], %[value]"
-        : [value] "={al}" (-> u8),
-        : [address] "N{dx}" (address),
-    );
-}
-
-fn outb(address: u16, value: u8) void {
-    asm volatile ("outb %[value], %[address]"
-        :
-        : [address] "{dx}" (address),
-          [value] "{al}" (value),
-    );
-}
-
-fn received() u8 {
-    return inb(port + 5) & 1;
-}
-
-fn getchar() u8 {
-    while (received() == 0) {}
-    return inb(port);
-}
-
-fn transmitEmpty() u8 {
-    return inb(port + 5) & 0x20;
-}
-
-fn putc(character: u8) void {
-    while (transmitEmpty() == 0) {}
-    outb(port, character);
-}
-
-fn read(context: Context, buffer: []u8) ReadError!usize {
-    _ = context;
-    buffer[0] = getchar();
-    return 1;
-}
-
-fn write(context: Context, bytes: []const u8) WriteError!usize {
-    _ = context;
-    for (bytes) |byte| {
-        if (byte == '\n') {
-            putc('\r');
-        }
-        putc(byte);
-    }
-    return bytes.len;
 }

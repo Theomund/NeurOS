@@ -20,14 +20,14 @@ const serial = @import("serial.zig");
 const std = @import("std");
 
 pub fn init() !void {
-    const writer = serial.Writer{ .context = .{} };
     const motd = try initrd.read("./etc/motd");
     const prompt = try parsePrompt();
 
+    const writer = serial.COM1.writer();
     try writer.print("\n{s}", .{motd});
     try writer.print("\n{s}", .{prompt});
 
-    const reader = serial.Reader{ .context = .{} };
+    const reader = serial.COM1.reader();
     while (true) {
         const byte = reader.readByte() catch |err| switch (err) {
             error.EndOfStream => break,

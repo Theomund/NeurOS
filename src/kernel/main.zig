@@ -44,9 +44,11 @@ export fn _start() callconv(.C) noreturn {
         @panic("Failed to use base revision.");
     }
 
-    gdt.init();
-    interrupts.init();
     serial.init();
+
+    gdt.init();
+
+    interrupts.init();
 
     memory.init() catch |err| {
         Log.err("Failed to initialize the memory subsystem [{}].", .{err});

@@ -23,7 +23,7 @@ const WriteError = error{};
 const Writer = std.io.GenericWriter(Context, WriteError, write);
 
 fn write(context: Context, bytes: []const u8) WriteError!usize {
-    const writer = serial.Writer{ .context = .{} };
+    const writer = serial.COM1.writer();
     const color = switch (context.level) {
         std.log.Level.debug => ansi.green,
         std.log.Level.info => ansi.blue,
