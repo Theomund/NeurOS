@@ -58,7 +58,7 @@ fn drawPixel(x: usize, y: usize, color: u32) void {
     @as(*u32, @ptrCast(@alignCast(framebuffer.address + offset))).* = color;
 }
 
-fn drawCharacter(typeface: font.Font, character: u8, x: usize, y: usize, fg: u32, bg: u32) !void {
+fn drawCharacter(typeface: font.Font, character: u8, x: usize, y: usize, fg: u32, bg: u32) void {
     const width: usize = typeface.header.glyph_size / 2;
     const height: usize = typeface.header.glyph_size;
 
@@ -93,7 +93,7 @@ fn write(context: Context, bytes: []const u8) WriteError!usize {
                 x = context.x;
             },
             else => {
-                try drawCharacter(typeface, byte, x, y, context.fg, context.bg);
+                drawCharacter(typeface, byte, x, y, context.fg, context.bg);
                 x += width;
             },
         }
