@@ -22,13 +22,34 @@ const Log = std.log.scoped(.vga);
 
 pub export var framebuffer_request: limine.FramebufferRequest = .{};
 
+const Cursor = struct {
+    x: usize,
+    y: usize,
+    bg: u32,
+    fg: u32,
+};
+
+const Color = enum(u32) {
+    black = 0x000000,
+    white = 0xFFFFFF,
+};
+
 const Display = struct {
+    cursor: Cursor,
     framebuffer: *limine.Framebuffer,
+
+    const Writer = std.io.GenericWriter(*Display, error{FileNotFound}, write);
 
     fn init() !Display {
         if (framebuffer_request.response) |framebuffer_response| {
-            const fb = framebuffer_response.framebuffers()[0];
-            return Display{ .framebuffer = fb };
+            const cursor = Cursor{
+                .x = 0,
+                .y = 12,
+                .fg = @intFromEnum(Color.white),
+                .bg = @intFromEnum(Color.black),
+            };
+            const framebuffer = framebuffer_response.framebuffers()[0];
+            return Display{ .cursor = cursor, .framebuffer = framebuffer };
         } else {
             Log.err("Failed to retrieve a framebuffer response.", .{});
             return error.MissingFramebuffer;
@@ -40,7 +61,7 @@ const Display = struct {
         @as(*u32, @ptrCast(@alignCast(self.framebuffer.address + offset))).* = color;
     }
 
-    fn drawCharacter(self: Display, face: font.Face, character: u8, x: usize, y: usize, fg: u32, bg: u32) void {
+    fn drawCharacter(self: Display, face: font.Face, character: u8) void {
         const width: usize = face.getWidth();
         const height: usize = face.getHeight();
 
@@ -51,58 +72,62 @@ const Display = struct {
 
         for (0..height) |cy| {
             for (0..width) |cx| {
-                const color = if (glyph[cy] & masks[cx] == 0) bg else fg;
-                self.drawPixel(cx + x, cy + y - 12, color);
+                const color = if (glyph[cy] & masks[cx] == 0) self.cursor.bg else self.cursor.fg;
+                self.drawPixel(cx + self.cursor.x, cy + self.cursor.y - 12, color);
             }
         }
     }
-};
 
-fn write(context: Context, bytes: []const u8) WriteError!usize {
-    const face = if (context.bold) try font.Face.init("./usr/share/fonts/ter-i16b.psf") else try font.Face.init("./usr/share/fonts/ter-i16n.psf");
-    const width = face.getWidth();
-    const height = face.getHeight();
-
-    var x = context.x;
-    var y = context.y;
-
-    for (bytes) |byte| {
-        switch (byte) {
-            '\n' => {
-                x = context.x;
-                y += height;
-            },
-            '\r' => {
-                x = context.x;
-            },
-            else => {
-                context.display.drawCharacter(face, byte, x, y, context.fg, context.bg);
-                x += width;
-            },
-        }
+    fn getCursor(self: Display) Cursor {
+        return self.cursor;
     }
 
-    return bytes.len;
-}
+    fn setCursor(self: *Display, x: usize, y: usize, fg: u32, bg: u32) void {
+        self.cursor = Cursor{ .x = x, .y = y, .fg = fg, .bg = bg };
+    }
 
-const Context = struct { display: Display, bold: bool, x: usize, y: usize, fg: u32, bg: u32 };
-const WriteError = error{FileNotFound};
-pub const Writer = std.io.GenericWriter(Context, WriteError, write);
+    fn write(self: *Display, bytes: []const u8) !usize {
+        const face = try font.Face.init("./usr/share/fonts/ter-i16n.psf");
+        const width = face.getWidth();
+        const height = face.getHeight();
 
-fn printMessage() !void {
-    const display = try Display.init();
-    const writer = Writer{ .context = .{
-        .display = display,
-        .bold = true,
-        .x = 0,
-        .y = 16,
-        .fg = 0xFFFF00,
-        .bg = 0x000000,
-    } };
-    try writer.print("Hello, world!", .{});
-}
+        const cursor = self.getCursor();
+
+        var x = cursor.x;
+        var y = cursor.y;
+
+        for (bytes) |byte| {
+            switch (byte) {
+                '\n' => {
+                    x = cursor.x;
+                    y += height;
+                },
+                '\r' => {
+                    x = cursor.x;
+                },
+                else => {
+                    self.drawCharacter(face, byte);
+                    x += width;
+                },
+            }
+            self.setCursor(x, y, cursor.fg, cursor.bg);
+        }
+
+        return bytes.len;
+    }
+
+    fn writer(self: *Display) Writer {
+        return .{ .context = self };
+    }
+};
 
 pub fn init() !void {
     try printMessage();
     Log.info("Initialized the VGA subsystem.", .{});
+}
+
+pub fn printMessage() !void {
+    var display = try Display.init();
+    const writer = display.writer();
+    try writer.print("Hello, world!", .{});
 }
