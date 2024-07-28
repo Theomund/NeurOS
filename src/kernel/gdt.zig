@@ -45,6 +45,15 @@ const Entry = packed struct {
     base_high: u8,
 };
 
+const Offset = enum(u16) {
+    null_descriptor = 0x00,
+    kernel_code = 0x08,
+    kernel_data = 0x10,
+    user_code = 0x18,
+    user_data = 0x20,
+    tss = 0x28,
+};
+
 fn createEntry(base: u32, limit: u20, access: AccessByte, flags: Flags) Entry {
     return .{
         .limit_low = @truncate(limit),
