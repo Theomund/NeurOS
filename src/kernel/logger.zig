@@ -36,6 +36,6 @@ fn write(context: Context, bytes: []const u8) WriteError!usize {
 
 pub fn log(comptime message_level: std.log.Level, comptime scope: @TypeOf(.enum_literal), comptime format: []const u8, args: anytype) void {
     const writer = Writer{ .context = Context{ .level = message_level } };
-    const message = @tagName(message_level) ++ "(" ++ @tagName(scope) ++ "): " ++ format ++ "\r\n";
+    const message = @tagName(message_level) ++ "(" ++ @tagName(scope) ++ "): " ++ format ++ "\n";
     try std.fmt.format(writer, message, args);
 }
