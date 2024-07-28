@@ -19,6 +19,23 @@ const std = @import("std");
 
 const Log = std.log.scoped(.gdt);
 
+const AccessByte = packed struct {
+    accessed: u1,
+    read_write: u1,
+    direction_conforming: u1,
+    executable: u1,
+    descriptor_type: u1,
+    privilege_level: u2,
+    present: u1,
+};
+
+const Flags = packed struct {
+    reserved: u1,
+    long_mode_code: u1,
+    size: u1,
+    granularity: u1,
+};
+
 pub fn init() void {
     interrupts.disable();
     Log.info("Initialized the Global Descriptor Table (GDT) subsystem.", .{});
