@@ -36,6 +36,26 @@ const Flags = packed struct {
     granularity: u1,
 };
 
+const Entry = packed struct {
+    limit_low: u16,
+    base_low: u24,
+    access: AccessByte,
+    limit_high: u4,
+    flags: Flags,
+    base_high: u8,
+};
+
+fn createEntry(base: u32, limit: u20, access: AccessByte, flags: Flags) Entry {
+    return .{
+        .limit_low = @truncate(limit),
+        .base_low = @truncate(base),
+        .access = access,
+        .limit_high = @truncate(limit >> 16),
+        .flags = flags,
+        .base_high = @truncate(base >> 24),
+    };
+}
+
 pub fn init() void {
     interrupts.disable();
     Log.info("Initialized the Global Descriptor Table (GDT) subsystem.", .{});
