@@ -19,40 +19,54 @@ const initrd = @import("initrd.zig");
 const serial = @import("serial.zig");
 const std = @import("std");
 
-pub fn init() !void {
-    const motd = try initrd.read("./etc/motd");
-    const prompt = try parsePrompt();
+const Log = std.log.scoped(.shell);
 
-    const writer = serial.COM1.writer();
-    try writer.print("\n{s}", .{motd});
-    try writer.print("\n{s}", .{prompt});
+const Console = struct {
+    prompt: []const u8,
+    reader: std.io.AnyReader,
+    writer: std.io.AnyWriter,
 
-    const reader = serial.COM1.reader();
-    while (true) {
-        const byte = reader.readByte() catch |err| switch (err) {
-            error.EndOfStream => break,
-            else => |e| return e,
-        };
-        switch (byte) {
-            '\x08' => try writer.print("\x08 \x08", .{}),
-            '\r' => try writer.print("\n{s}", .{prompt}),
-            else => try writer.writeByte(byte),
+    fn init(reader: std.io.AnyReader, writer: std.io.AnyWriter) !Console {
+        const motd = try initrd.read("./etc/motd");
+        const prompt = try getPrompt();
+
+        try writer.print("\n{s}", .{motd});
+        try writer.print("\n{s}", .{prompt});
+
+        return .{ .prompt = prompt, .reader = reader, .writer = writer };
+    }
+
+    fn parse(self: Console) !void {
+        while (true) {
+            const byte = try self.reader.readByte();
+            switch (byte) {
+                '\x08' => try self.writer.print("\x08 \x08", .{}),
+                '\r' => try self.writer.print("\n{s}", .{self.prompt}),
+                else => try self.writer.writeByte(byte),
+            }
         }
     }
-}
 
-fn parsePrompt() ![]const u8 {
-    const profile = try initrd.read("./etc/profile");
+    fn getPrompt() ![]const u8 {
+        const profile = try initrd.read("./etc/profile");
 
-    const start_quote = std.mem.indexOf(u8, profile, "\"");
-    const end_quote = std.mem.lastIndexOf(u8, profile, "\"");
+        const start_quote = std.mem.indexOf(u8, profile, "\"");
+        const end_quote = std.mem.lastIndexOf(u8, profile, "\"");
 
-    if (start_quote == null or end_quote == null) {
-        return error.MissingQuote;
+        if (start_quote == null or end_quote == null) {
+            return error.MissingQuote;
+        }
+
+        const start_index = start_quote.? + 1;
+        const end_index = end_quote.?;
+
+        return profile[start_index..end_index];
     }
+};
 
-    const start_index = start_quote.? + 1;
-    const end_index = end_quote.?;
-
-    return profile[start_index..end_index];
+pub fn init() !void {
+    const reader = serial.COM1.reader().any();
+    const writer = serial.COM1.writer().any();
+    const console = try Console.init(reader, writer);
+    try console.parse();
 }
