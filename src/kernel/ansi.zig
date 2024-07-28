@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const bold = "\x1b[1m";
 pub const blue = "\x1b[38;2;0;151;230m";
+pub const bold = "\x1b[1m";
 pub const default = "\x1b[39m";
 pub const green = "\x1b[38;2;68;189;50m";
 pub const normal = "\x1b[0m";

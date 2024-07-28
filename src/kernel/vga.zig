@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+const ansi = @import("ansi.zig");
 const font = @import("font.zig");
 const limine = @import("limine");
 const std = @import("std");
@@ -31,13 +32,18 @@ const Cursor = struct {
 
 const Color = enum(u32) {
     black = 0x000000,
-    white = 0xFFFFFF,
+    blue = 0x0097E6,
+    green = 0x44BD32,
+    red = 0xE84118,
+    white = 0xF5F6FA,
+    yellow = 0xFBC531,
 };
 
 const Display = struct {
     cursor: Cursor,
     framebuffer: *limine.Framebuffer,
 
+    const Reader = std.io.GenericReader(*Display, error{}, read);
     const Writer = std.io.GenericWriter(*Display, error{FileNotFound}, write);
 
     fn init() !Display {
@@ -86,18 +92,50 @@ const Display = struct {
         self.cursor = Cursor{ .x = x, .y = y, .fg = fg, .bg = bg };
     }
 
+    fn read(self: *Display, buffer: []u8) !usize {
+        _ = self;
+        _ = buffer;
+        return 0;
+    }
+
     fn write(self: *Display, bytes: []const u8) !usize {
-        const face = try font.Face.init("./usr/share/fonts/ter-i16n.psf");
+        var face = try font.Face.init("./usr/share/fonts/ter-i16n.psf");
         const width = face.getWidth();
         const height = face.getHeight();
 
         const cursor = self.getCursor();
-
         var x = cursor.x;
         var y = cursor.y;
+        var fg = cursor.fg;
 
-        for (bytes) |byte| {
-            switch (byte) {
+        var i: usize = 0;
+        while (i < bytes.len) {
+            switch (bytes[i]) {
+                '\x1b' => {
+                    const slice = bytes[i..];
+                    const end = std.mem.indexOf(u8, slice, "m").?;
+                    const sequence = slice[0 .. end + 1];
+
+                    if (std.mem.eql(u8, sequence, ansi.blue)) {
+                        fg = @intFromEnum(Color.blue);
+                    } else if (std.mem.eql(u8, sequence, ansi.bold)) {
+                        face = try font.Face.init("./usr/share/fonts/ter-i16b.psf");
+                    } else if (std.mem.eql(u8, sequence, ansi.default)) {
+                        fg = @intFromEnum(Color.white);
+                    } else if (std.mem.eql(u8, sequence, ansi.green)) {
+                        fg = @intFromEnum(Color.green);
+                    } else if (std.mem.eql(u8, sequence, ansi.normal)) {
+                        face = try font.Face.init("./usr/share/fonts/ter-i16n.psf");
+                    } else if (std.mem.eql(u8, sequence, ansi.red)) {
+                        fg = @intFromEnum(Color.red);
+                    } else if (std.mem.eql(u8, sequence, ansi.yellow)) {
+                        fg = @intFromEnum(Color.yellow);
+                    } else {
+                        Log.warn("Encountered an unknown ANSI escape sequence.", .{});
+                    }
+
+                    i += end;
+                },
                 '\n' => {
                     x = cursor.x;
                     y += height;
@@ -106,28 +144,33 @@ const Display = struct {
                     x = cursor.x;
                 },
                 else => {
-                    self.drawCharacter(face, byte);
+                    self.drawCharacter(face, bytes[i]);
                     x += width;
                 },
             }
-            self.setCursor(x, y, cursor.fg, cursor.bg);
+            self.setCursor(x, y, fg, cursor.bg);
+            i += 1;
         }
 
         return bytes.len;
     }
 
-    fn writer(self: *Display) Writer {
+    pub fn reader(self: *Display) Reader {
+        return .{ .context = self };
+    }
+
+    pub fn writer(self: *Display) Writer {
         return .{ .context = self };
     }
 };
 
+pub var display: Display = undefined;
+
 pub fn init() !void {
-    try printMessage();
+    try setupDisplay();
     Log.info("Initialized the VGA subsystem.", .{});
 }
 
-pub fn printMessage() !void {
-    var display = try Display.init();
-    const writer = display.writer();
-    try writer.print("Hello, world!", .{});
+fn setupDisplay() !void {
+    display = try Display.init();
 }

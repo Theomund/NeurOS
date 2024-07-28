@@ -18,6 +18,7 @@ const ansi = @import("ansi.zig");
 const initrd = @import("initrd.zig");
 const serial = @import("serial.zig");
 const std = @import("std");
+const vga = @import("vga.zig");
 
 const Log = std.log.scoped(.shell);
 
@@ -65,8 +66,12 @@ const Console = struct {
 };
 
 pub fn init() !void {
-    const reader = serial.COM1.reader().any();
-    const writer = serial.COM1.writer().any();
-    const console = try Console.init(reader, writer);
-    try console.parse();
+    const vga_reader = vga.display.reader().any();
+    const vga_writer = vga.display.writer().any();
+    _ = try Console.init(vga_reader, vga_writer);
+
+    const serial_reader = serial.COM1.reader().any();
+    const serial_writer = serial.COM1.writer().any();
+    const serial_console = try Console.init(serial_reader, serial_writer);
+    try serial_console.parse();
 }
