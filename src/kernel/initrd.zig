@@ -47,100 +47,111 @@ const File = struct {
 
 const block_size = 512;
 
-var files: std.ArrayList(File) = undefined;
+const Disk = struct {
+    files: std.ArrayList(File),
+
+    fn init() !Disk {
+        return .{
+            .files = try parseModule(),
+        };
+    }
+
+    fn parseModule() !std.ArrayList(File) {
+        if (module_request.response) |module_response| {
+            const initrd = module_response.modules()[0];
+            Log.debug("Detected initial RAM disk module with {s} as its path ({d} bytes).", .{ initrd.path, initrd.size });
+
+            var buffer: [1048576]u8 = undefined;
+            var fba = std.heap.FixedBufferAllocator.init(&buffer);
+            const allocator = fba.allocator();
+
+            var files = std.ArrayList(File).init(allocator);
+
+            var address = initrd.address;
+            while (parseFile(address)) |file| {
+                const mode = try parseMode(&file.header.mode);
+                const size = try parseOctal(&file.header.size);
+                Log.debug("{s} {s}/{s} {d} {s} {s}", .{ mode, file.header.username, file.header.group, size, file.header.mtime, file.header.name });
+
+                try files.append(file);
+
+                address += block_size + block_size * try std.math.divCeil(u64, size, block_size);
+            } else |_| {
+                Log.debug("Finished parsing {d} files from the initial RAM disk.", .{files.items.len});
+                return files;
+            }
+        } else {
+            Log.err("Failed to retrieve a module response.", .{});
+            return error.MissingModule;
+        }
+    }
+
+    fn parseMode(mode: []const u8) ![9]u8 {
+        var buffer: [9]u8 = undefined;
+
+        const left_trimmed = std.mem.trimLeft(u8, mode, "0");
+        const right_trimmed = std.mem.trimRight(u8, left_trimmed, "\x00");
+
+        for (0..3, right_trimmed) |i, digit| {
+            const symbol = switch (digit) {
+                '0' => "---",
+                '1' => "--x",
+                '2' => "-w-",
+                '3' => "-wx",
+                '4' => "r--",
+                '5' => "r-x",
+                '6' => "rw-",
+                '7' => "rwx",
+                else => return error.InvalidDigit,
+            };
+
+            buffer[i * 3] = symbol[0];
+            buffer[i * 3 + 1] = symbol[1];
+            buffer[i * 3 + 2] = symbol[2];
+        }
+
+        return buffer;
+    }
+
+    fn parseFile(address: [*]u8) !File {
+        const header = std.mem.bytesToValue(Header, address);
+
+        if (!std.mem.eql(u8, &header.indicator, "ustar\x00")) {
+            return error.InvalidFile;
+        }
+
+        const size = try parseOctal(&header.size);
+        const data = address[block_size .. block_size + size];
+
+        return File{ .header = header, .data = data };
+    }
+
+    fn parseOctal(raw: []const u8) !u64 {
+        const left_trimmed = std.mem.trimLeft(u8, raw, "0");
+        const right_trimmed = std.mem.trimRight(u8, left_trimmed, "\x00");
+
+        if (right_trimmed.len == 0) {
+            return 0;
+        }
+
+        return std.fmt.parseInt(u64, right_trimmed, 8);
+    }
+
+    pub fn read(self: Disk, path: []const u8) ![]const u8 {
+        for (self.files.items) |file| {
+            const name = std.mem.trimRight(u8, &file.header.name, "\x00");
+
+            if (std.mem.eql(u8, name, path)) {
+                return file.data;
+            }
+        }
+        return error.FileNotFound;
+    }
+};
+
+pub var disk: Disk = undefined;
 
 pub fn init() !void {
-    try parseModule();
+    disk = try Disk.init();
     Log.info("Initialized the initial RAM disk (initrd) subsystem.", .{});
-}
-
-fn parseModule() !void {
-    if (module_request.response) |module_response| {
-        const initrd = module_response.modules()[0];
-        Log.debug("Detected initial RAM disk module with {s} as its path ({d} bytes).", .{ initrd.path, initrd.size });
-
-        var buffer: [1048576]u8 = undefined;
-        var fba = std.heap.FixedBufferAllocator.init(&buffer);
-        const allocator = fba.allocator();
-
-        files = std.ArrayList(File).init(allocator);
-
-        var address = initrd.address;
-        while (parseFile(address)) |file| {
-            const mode = try parseMode(&file.header.mode);
-            const size = try parseOctal(&file.header.size);
-            Log.debug("{s} {s}/{s} {d} {s} {s}", .{ mode, file.header.username, file.header.group, size, file.header.mtime, file.header.name });
-
-            try files.append(file);
-
-            address += block_size + block_size * try std.math.divCeil(u64, size, block_size);
-        } else |_| {
-            Log.debug("Finished parsing {d} files from the initial RAM disk.", .{files.items.len});
-        }
-    } else {
-        Log.err("Failed to retrieve a module response.", .{});
-        return error.MissingModule;
-    }
-}
-
-fn parseMode(mode: []const u8) ![9]u8 {
-    var buffer: [9]u8 = undefined;
-
-    const left_trimmed = std.mem.trimLeft(u8, mode, "0");
-    const right_trimmed = std.mem.trimRight(u8, left_trimmed, "\x00");
-
-    for (0..3, right_trimmed) |i, digit| {
-        const symbol = switch (digit) {
-            '0' => "---",
-            '1' => "--x",
-            '2' => "-w-",
-            '3' => "-wx",
-            '4' => "r--",
-            '5' => "r-x",
-            '6' => "rw-",
-            '7' => "rwx",
-            else => return error.InvalidDigit,
-        };
-
-        buffer[i * 3] = symbol[0];
-        buffer[i * 3 + 1] = symbol[1];
-        buffer[i * 3 + 2] = symbol[2];
-    }
-
-    return buffer;
-}
-
-fn parseFile(address: [*]u8) !File {
-    const header = std.mem.bytesToValue(Header, address);
-
-    if (!std.mem.eql(u8, &header.indicator, "ustar\x00")) {
-        return error.InvalidFile;
-    }
-
-    const size = try parseOctal(&header.size);
-    const data = address[block_size .. block_size + size];
-
-    return File{ .header = header, .data = data };
-}
-
-fn parseOctal(raw: []const u8) !u64 {
-    const left_trimmed = std.mem.trimLeft(u8, raw, "0");
-    const right_trimmed = std.mem.trimRight(u8, left_trimmed, "\x00");
-
-    if (right_trimmed.len == 0) {
-        return 0;
-    }
-
-    return std.fmt.parseInt(u64, right_trimmed, 8);
-}
-
-pub fn read(path: []const u8) ![]const u8 {
-    for (files.items) |file| {
-        const name = std.mem.trimRight(u8, &file.header.name, "\x00");
-
-        if (std.mem.eql(u8, name, path)) {
-            return file.data;
-        }
-    }
-    return error.FileNotFound;
 }

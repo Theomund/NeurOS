@@ -28,7 +28,7 @@ const Console = struct {
     writer: std.io.AnyWriter,
 
     fn init(reader: std.io.AnyReader, writer: std.io.AnyWriter) !Console {
-        const motd = try initrd.read("./etc/motd");
+        const motd = try initrd.disk.read("./etc/motd");
         const prompt = try getPrompt();
 
         try writer.print("\n{s}", .{motd});
@@ -49,7 +49,7 @@ const Console = struct {
     }
 
     fn getPrompt() ![]const u8 {
-        const profile = try initrd.read("./etc/profile");
+        const profile = try initrd.disk.read("./etc/profile");
 
         const start_quote = std.mem.indexOf(u8, profile, "\"");
         const end_quote = std.mem.lastIndexOf(u8, profile, "\"");

@@ -30,7 +30,7 @@ pub const Face = struct {
     data: []const u8,
 
     pub fn init(path: []const u8) !Face {
-        const psf = try initrd.read(path);
+        const psf = try initrd.disk.read(path);
         const header = Header{
             .magic = std.mem.readInt(u16, psf[0..2], .little),
             .font_mode = psf[2],
