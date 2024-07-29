@@ -19,9 +19,9 @@ RUN dnf copr enable -y mczernek/vale
 RUN dnf install -y \
     --repofrompath 'terra,https://repos.fyralabs.com/terra$releasever' \
     --setopt='terra.gpgkey=https://repos.fyralabs.com/terra$releasever/key.asc' \
-    terra-release-40 \ 
-    && dnf install -y \ 
-       gdb-14.2 \ 
+    terra-release-40 \
+    && dnf install -y \
+       gdb-14.2 \
        limine-7.13.1 \
        qemu-system-x86-8.2.2 \
        vale-3.7.0 \
