@@ -54,16 +54,135 @@ const Offset = enum(u16) {
     tss = 0x28,
 };
 
-fn createEntry(base: u32, limit: u20, access: AccessByte, flags: Flags) Entry {
-    return .{
-        .limit_low = @truncate(limit),
-        .base_low = @truncate(base),
-        .access = access,
-        .limit_high = @truncate(limit >> 16),
-        .flags = flags,
-        .base_high = @truncate(base >> 24),
-    };
-}
+const GlobalDescriptorTable = struct {
+    entries: Entry[6],
+
+    fn init() GlobalDescriptorTable {
+        const null_access = AccessByte{
+            .accessed = 0,
+            .read_write = 0,
+            .direction_conforming = 0,
+            .executable = 0,
+            .descriptor_type = 0,
+            .privilege_level = 0,
+            .present = 0,
+        };
+
+        const null_flags = Flags{
+            .reserved = 0,
+            .long_mode_code = 0,
+            .size = 0,
+            .granularity = 0,
+        };
+
+        const kernel_code_access = AccessByte{
+            .accessed = 0,
+            .read_write = 1,
+            .direction_conforming = 0,
+            .executable = 1,
+            .descriptor_type = 1,
+            .privilege_level = 0,
+            .present = 1,
+        };
+
+        const kernel_code_flags = Flags{
+            .reserved = 0,
+            .long_mode_code = 1,
+            .size = 0,
+            .granularity = 1,
+        };
+
+        const kernel_data_access = AccessByte{
+            .accessed = 0,
+            .read_write = 1,
+            .direction_conforming = 0,
+            .executable = 0,
+            .descriptor_type = 1,
+            .privilege_level = 0,
+            .present = 1,
+        };
+
+        const kernel_data_flags = Flags{
+            .reserved = 0,
+            .long_mode_code = 0,
+            .size = 1,
+            .granularity = 1,
+        };
+
+        const user_code_access = AccessByte{
+            .accessed = 0,
+            .read_write = 1,
+            .direction_conforming = 0,
+            .executable = 1,
+            .descriptor_type = 1,
+            .privilege_level = 3,
+            .present = 1,
+        };
+
+        const user_code_flags = Flags{
+            .reserved = 0,
+            .long_mode_code = 1,
+            .size = 0,
+            .granularity = 1,
+        };
+
+        const user_data_access = AccessByte{
+            .accessed = 0,
+            .read_write = 1,
+            .direction_conforming = 0,
+            .executable = 0,
+            .descriptor_type = 1,
+            .privilege_level = 3,
+            .present = 1,
+        };
+
+        const user_data_flags = Flags{
+            .reserved = 0,
+            .long_mode_code = 0,
+            .size = 1,
+            .granularity = 1,
+        };
+
+        const task_state_access = AccessByte{
+            .accessed = 1,
+            .read_write = 0,
+            .direction_conforming = 0,
+            .executable = 1,
+            .descriptor_type = 0,
+            .privilege_level = 0,
+            .present = 1,
+        };
+
+        const task_state_flags = Flags{
+            .reserved = 0,
+            .long_mode_code = 0,
+            .size = 0,
+            .granularity = 0,
+        };
+
+        const entries = .{
+            createEntry(0, 0, null_access, null_flags),
+            createEntry(0, 0xFFFFF, kernel_code_access, kernel_code_flags),
+            createEntry(0, 0xFFFFF, kernel_data_access, kernel_data_flags),
+            createEntry(0, 0xFFFFF, user_code_access, user_code_flags),
+            createEntry(0, 0xFFFFF, user_data_access, user_data_flags),
+            createEntry(0, 0xFFFFF, task_state_access, task_state_flags),
+        };
+
+        return .{ .entries = entries };
+    }
+
+    fn createEntry(base: u32, limit: u20, access: AccessByte, flags: Flags) Entry {
+        return .{
+            .limit_low = @truncate(limit),
+            .base_low = @truncate(base),
+            .access = access,
+            .limit_high = @truncate(limit >> 16),
+            .flags = flags,
+            .base_high = @truncate(base >> 24),
+        };
+    }
+};
 
 pub fn init() void {
     interrupts.disable();
