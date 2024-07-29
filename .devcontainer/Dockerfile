@@ -19,14 +19,14 @@ RUN dnf copr enable -y mczernek/vale
 RUN dnf install -y \
     --repofrompath 'terra,https://repos.fyralabs.com/terra$releasever' \
     --setopt='terra.gpgkey=https://repos.fyralabs.com/terra$releasever/key.asc' \
-    terra-release \ 
+    terra-release-40 \ 
     && dnf install -y \ 
-       gdb \ 
-       limine \
-       qemu-system-x86 \
-       vale \
-       xorriso \
-       zig \
+       gdb-14.2 \ 
+       limine-7.13.1 \
+       qemu-system-x86-8.2.2 \
+       vale-3.7.0 \
+       xorriso-1.5.6 \
+       zig-0.13.0 \
     && dnf clean all
 RUN wget -qO- https://github.com/zigtools/zls/releases/download/0.13.0/zls-x86_64-linux.tar.xz | tar -xJ -C /usr/local/bin zls
 RUN useradd -m developer
