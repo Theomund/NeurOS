@@ -22,7 +22,7 @@ RUN dnf install -y \
     terra-release-40 \
     && dnf install -y \
        gdb-14.2 \
-       limine-7.13.1 \
+       limine-7.13.2 \
        qemu-system-x86-8.2.2 \
        vale-3.7.0 \
        xorriso-1.5.6 \
