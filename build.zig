@@ -70,7 +70,7 @@ pub fn build(b: *std.Build) void {
     const limine_data = "/usr/share/limine";
     const limine_bios_cd = b.fmt("{s}/limine-bios-cd.bin", .{limine_data});
     const limine_bios_sys = b.fmt("{s}/limine-bios.sys", .{limine_data});
-    const limine_config = b.path("src/bootloader/limine.cfg");
+    const limine_config = b.path("src/bootloader/limine.conf");
     const limine_uefi_cd = b.fmt("{s}/limine-uefi-cd.bin", .{limine_data});
 
     const install_bin_cmd = b.addSystemCommand(&.{"install"});
