@@ -45,6 +45,16 @@ const Entry = packed struct {
     base_high: u8,
 };
 
+const TaskStateSegment = packed struct {
+    reserved_1: u32,
+    rsp: [3]u64,
+    reserved_2: u64,
+    ist: [7]u64,
+    reserved_3: u64,
+    reserved_4: u16,
+    iopb: u16,
+};
+
 const Offset = enum(u16) {
     null_descriptor = 0x00,
     kernel_code = 0x08,
@@ -160,13 +170,23 @@ const GlobalDescriptorTable = struct {
             .granularity = 0,
         };
 
+        const task_state_segment = TaskStateSegment{
+            .reserved_1 = 0,
+            .rsp = .{ 0, 0, 0 },
+            .reserved_2 = 0,
+            .ist = .{ 0, 0, 0, 0, 0, 0, 0 },
+            .reserved_3 = 0,
+            .reserved_4 = 0,
+            .iopb = @sizeOf(TaskStateSegment),
+        };
+
         const entries = .{
             createEntry(0, 0, null_access, null_flags),
             createEntry(0, 0xFFFFF, kernel_code_access, kernel_code_flags),
             createEntry(0, 0xFFFFF, kernel_data_access, kernel_data_flags),
             createEntry(0, 0xFFFFF, user_code_access, user_code_flags),
             createEntry(0, 0xFFFFF, user_data_access, user_data_flags),
-            createEntry(0, 0xFFFFF, task_state_access, task_state_flags),
+            createEntry(&task_state_segment, @sizeOf(TaskStateSegment) - 1, task_state_access, task_state_flags),
         };
 
         return .{ .entries = entries };
