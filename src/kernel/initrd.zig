@@ -91,10 +91,9 @@ const Disk = struct {
     fn parseMode(mode: []const u8) ![9]u8 {
         var buffer: [9]u8 = undefined;
 
-        const left_trimmed = std.mem.trimLeft(u8, mode, "0");
-        const right_trimmed = std.mem.trimRight(u8, left_trimmed, "\x00");
+        const permissions = trim(mode);
 
-        for (0..3, right_trimmed) |i, digit| {
+        for (0..3, permissions) |i, digit| {
             const symbol = switch (digit) {
                 '0' => "---",
                 '1' => "--x",
@@ -177,25 +176,30 @@ const Disk = struct {
     }
 
     fn parseOctal(raw: []const u8) !u64 {
-        const left_trimmed = std.mem.trimLeft(u8, raw, "0");
-        const right_trimmed = std.mem.trimRight(u8, left_trimmed, "\x00");
+        const octal = trim(raw);
 
-        if (right_trimmed.len == 0) {
+        if (octal.len == 0) {
             return 0;
         }
 
-        return std.fmt.parseInt(u64, right_trimmed, 8);
+        return std.fmt.parseInt(u64, octal, 8);
     }
 
     pub fn read(self: Disk, path: []const u8) ![]const u8 {
         for (self.files.items) |file| {
-            const name = std.mem.trimRight(u8, &file.header.name, "\x00");
+            const name = trim(&file.header.name);
 
             if (std.mem.eql(u8, name, path)) {
                 return file.data;
             }
         }
         return error.FileNotFound;
+    }
+
+    fn trim(raw: []const u8) []const u8 {
+        const left_trimmed = std.mem.trimLeft(u8, raw, "0");
+        const right_trimmed = std.mem.trimRight(u8, left_trimmed, "\x00");
+        return right_trimmed;
     }
 };
 
