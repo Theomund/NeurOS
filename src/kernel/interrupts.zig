@@ -33,7 +33,7 @@ const InterruptDescriptorTable = struct {
 
     fn init() void {}
 
-    fn makeEntry(offset: u64, selector: u16, ist: u8, type_attributes: u8) Entry {
+    fn createEntry(offset: u64, selector: u16, ist: u8, type_attributes: u8) Entry {
         return .{
             .offset_low = @truncate(offset),
             .selector = selector,
