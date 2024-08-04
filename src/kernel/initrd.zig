@@ -71,7 +71,9 @@ const Disk = struct {
             while (parseFile(address)) |file| {
                 const mode = try parseMode(&file.header.mode);
                 const size = try parseOctal(&file.header.size);
-                Log.debug("{s} {s}/{s} {d} {s} {s}", .{ mode, file.header.username, file.header.group, size, file.header.mtime, file.header.name });
+                const timestamp = try parseTimestamp(&file.header.mtime);
+
+                Log.debug("{s} {s}/{s} {d} {s} {s}", .{ mode, file.header.username, file.header.group, size, timestamp, file.header.name });
 
                 try files.append(file);
 
@@ -111,6 +113,58 @@ const Disk = struct {
         }
 
         return buffer;
+    }
+
+    fn parseTimestamp(timestamp: []const u8) ![]const u8 {
+        const seconds_in_leap_year = std.time.s_per_day * 366;
+        const seconds_in_year = std.time.s_per_day * 365;
+
+        var total_seconds = try parseOctal(timestamp);
+        var year: u16 = 1970;
+
+        while (total_seconds > seconds_in_leap_year) {
+            if (std.time.epoch.isLeapYear(year)) {
+                total_seconds -= seconds_in_leap_year;
+            } else {
+                total_seconds -= seconds_in_year;
+            }
+            year += 1;
+        }
+
+        const days_in_february: u8 = if (std.time.epoch.isLeapYear(year)) 29 else 28;
+        const days_in_month: [12]u8 = .{ 31, days_in_february, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+        var month: u8 = 1;
+
+        while (total_seconds > std.time.s_per_day * @as(u64, days_in_month[month - 1])) {
+            total_seconds -= std.time.s_per_day * @as(u64, days_in_month[month - 1]);
+            month += 1;
+        }
+
+        var day: u8 = 1;
+
+        while (total_seconds > std.time.s_per_day) {
+            total_seconds -= std.time.s_per_day;
+            day += 1;
+        }
+
+        var hour: u8 = 0;
+
+        while (total_seconds > std.time.s_per_hour) {
+            total_seconds -= std.time.s_per_hour;
+            hour += 1;
+        }
+
+        var minute: u8 = 0;
+
+        while (total_seconds > std.time.s_per_min) {
+            total_seconds -= std.time.s_per_min;
+            minute += 1;
+        }
+
+        var buffer: [16]u8 = undefined;
+        const slice = try std.fmt.bufPrint(&buffer, "{d}-{d:0>2}-{d:0>2} {d:0>2}:{d:0>2}", .{ year, month, day, hour, minute });
+
+        return slice;
     }
 
     fn parseFile(address: [*]u8) !File {
