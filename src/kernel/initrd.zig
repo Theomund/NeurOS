@@ -116,18 +116,14 @@ const Disk = struct {
     }
 
     fn parseTimestamp(timestamp: []const u8) ![]const u8 {
-        const seconds_in_leap_year = std.time.s_per_day * 366;
-        const seconds_in_year = std.time.s_per_day * 365;
-
         var total_seconds = try parseOctal(timestamp);
-        var year: u16 = 1970;
+
+        const seconds_in_day: u64 = std.time.s_per_day;
+        const seconds_in_leap_year = seconds_in_day * 366;
+        var year: std.time.epoch.Year = 1970;
 
         while (total_seconds > seconds_in_leap_year) {
-            if (std.time.epoch.isLeapYear(year)) {
-                total_seconds -= seconds_in_leap_year;
-            } else {
-                total_seconds -= seconds_in_year;
-            }
+            total_seconds -= seconds_in_day * std.time.epoch.getDaysInYear(year);
             year += 1;
         }
 
@@ -135,15 +131,15 @@ const Disk = struct {
         const days_in_month: [12]u8 = .{ 31, days_in_february, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
         var month: u8 = 1;
 
-        while (total_seconds > std.time.s_per_day * @as(u64, days_in_month[month - 1])) {
-            total_seconds -= std.time.s_per_day * @as(u64, days_in_month[month - 1]);
+        while (total_seconds > seconds_in_day * days_in_month[month - 1]) {
+            total_seconds -= seconds_in_day * days_in_month[month - 1];
             month += 1;
         }
 
         var day: u8 = 1;
 
-        while (total_seconds > std.time.s_per_day) {
-            total_seconds -= std.time.s_per_day;
+        while (total_seconds > seconds_in_day) {
+            total_seconds -= seconds_in_day;
             day += 1;
         }
 
