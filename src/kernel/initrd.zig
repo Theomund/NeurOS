@@ -126,12 +126,11 @@ const Disk = struct {
             year += 1;
         }
 
-        const days_in_february: u8 = if (std.time.epoch.isLeapYear(year)) 29 else 28;
-        const days_in_month: [12]u8 = .{ 31, days_in_february, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
         var month: u8 = 1;
+        const is_leap_year = if (std.time.epoch.isLeapYear(year)) std.time.epoch.YearLeapKind.leap else std.time.epoch.YearLeapKind.not_leap;
 
-        while (total_seconds > seconds_in_day * days_in_month[month - 1]) {
-            total_seconds -= seconds_in_day * days_in_month[month - 1];
+        while (total_seconds > seconds_in_day * std.time.epoch.getDaysInMonth(is_leap_year, @enumFromInt(month))) {
+            total_seconds -= seconds_in_day * std.time.epoch.getDaysInMonth(is_leap_year, @enumFromInt(month));
             month += 1;
         }
 
