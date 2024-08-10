@@ -53,14 +53,10 @@ pub const PPM = struct {
             return error.InvalidImage;
         }
 
-        const width = try std.fmt.parseInt(u16, iterator.next().?, 10);
-        const height = try std.fmt.parseInt(u16, iterator.next().?, 10);
-        const max_value = try std.fmt.parseInt(u16, iterator.next().?, 10);
-
         const header = Header{
-            .width = width,
-            .height = height,
-            .max_value = max_value,
+            .width = try std.fmt.parseInt(u16, iterator.next().?, 10),
+            .height = try std.fmt.parseInt(u16, iterator.next().?, 10),
+            .max_value = try std.fmt.parseInt(u16, iterator.next().?, 10),
         };
 
         const position = Position{
