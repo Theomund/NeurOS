@@ -17,6 +17,7 @@
 const font = @import("font.zig");
 const gdt = @import("gdt.zig");
 const initrd = @import("initrd.zig");
+const intro = @import("intro.zig");
 const interrupts = @import("interrupts.zig");
 const limine = @import("limine");
 const logger = @import("logger.zig");
@@ -64,6 +65,10 @@ export fn _start() callconv(.C) noreturn {
 
     vga.init() catch |err| {
         Log.err("Failed to initialize the VGA subsystem [{}].", .{err});
+    };
+
+    intro.init() catch |err| {
+        Log.err("Failed to initialize the introduction screen [{}]", .{err});
     };
 
     Log.info("The operating system has been successfully initialized.", .{});
