@@ -213,3 +213,8 @@ test "Octal Parsing" {
     const decimal = try Disk.parseOctal("0100");
     try std.testing.expectEqual(64, decimal);
 }
+
+test "Mode Parsing" {
+    const mode = try Disk.parseMode("770");
+    try std.testing.expectEqualStrings("rwxrwx---", &mode);
+}
