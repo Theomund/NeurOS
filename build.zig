@@ -186,5 +186,15 @@ pub fn build(b: *std.Build) void {
     const format_step = b.step("format", "Format the source code");
     format_step.dependOn(&format_zig_cmd.step);
 
+    const initrd_test_compile = b.addTest(.{
+        .root_source_file = b.path("src/kernel/initrd.zig"),
+    });
+    initrd_test_compile.root_module.addImport("limine", limine.module("limine"));
+
+    const initrd_test_run = b.addRunArtifact(initrd_test_compile);
+
+    const test_step = b.step("test", "Run the unit and integration tests.");
+    test_step.dependOn(&initrd_test_run.step);
+
     b.default_step = iso_step;
 }

@@ -208,3 +208,8 @@ pub fn init() !void {
     disk = try Disk.init();
     Log.info("Initialized the initial RAM disk (initrd) subsystem.", .{});
 }
+
+test "Octal Parsing" {
+    const decimal = try Disk.parseOctal("0100");
+    try std.testing.expectEqual(64, decimal);
+}
