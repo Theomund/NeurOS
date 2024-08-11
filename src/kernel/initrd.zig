@@ -19,7 +19,7 @@ const std = @import("std");
 
 const Log = std.log.scoped(.initrd);
 
-pub export var module_request: limine.ModuleRequest = .{};
+export var module_request: limine.ModuleRequest = .{};
 
 const Header = struct {
     name: [100]u8,

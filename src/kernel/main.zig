@@ -28,11 +28,11 @@ const smp = @import("smp.zig");
 const std = @import("std");
 const vga = @import("vga.zig");
 
-pub const Log = std.log.scoped(.kernel);
+const Log = std.log.scoped(.kernel);
 
 pub const std_options: std.Options = .{ .log_level = .debug, .logFn = logger.log };
 
-pub export var base_revision: limine.BaseRevision = .{ .revision = 2 };
+export var base_revision: limine.BaseRevision = .{ .revision = 2 };
 
 inline fn done() noreturn {
     while (true) {

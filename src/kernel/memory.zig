@@ -20,41 +20,71 @@ const std = @import("std");
 
 const Log = std.log.scoped(.memory);
 
-pub export var memory_map_request: limine.MemoryMapRequest = .{};
-pub export var stack_size_request: limine.StackSizeRequest = .{ .stack_size = 10485760 };
+export var memory_map_request: limine.MemoryMapRequest = .{};
+export var stack_size_request: limine.StackSizeRequest = .{ .stack_size = 10485760 };
+
+const Physical = struct {
+    frames: []u64,
+
+    fn init() !Physical {
+        if (memory_map_request.response) |memory_map_response| {
+            const count = memory_map_response.entry_count;
+            Log.debug("Detected {d} entries in the memory map.", .{count});
+
+            const entries = memory_map_response.entries();
+            var usable: u32 = 0;
+
+            for (entries) |entry| {
+                Log.debug("Found memory map entry of type {s}.", .{@tagName(entry.kind)});
+                if (entry.kind == limine.MemoryMapEntryType.usable) {
+                    usable += 1;
+                }
+            }
+
+            Log.debug("Detected {d} usable memory map entries.", .{usable});
+
+            return .{ .frames = undefined };
+        } else {
+            Log.err("Failed to parse the memory map.", .{});
+            return error.ParsingError;
+        }
+    }
+};
+
+const Virtual = struct {
+    pages: []u64,
+
+    fn init() Virtual {
+        return .{ .pages = undefined };
+    }
+};
+
+const Stack = struct {
+    size: u64,
+
+    fn init() !Stack {
+        if (stack_size_request.response) |_| {
+            const size = stack_size_request.stack_size;
+            Log.debug("Expanded the kernel stack space to {d} bytes.", .{size});
+            return .{ .size = size };
+        } else {
+            Log.err("Failed to expand the kernel stack.", .{});
+            return error.StackError;
+        }
+    }
+
+    fn getSize(self: Stack) u64 {
+        return self.size;
+    }
+};
+
+pub var physical: Physical = undefined;
+pub var virtual: Virtual = undefined;
+pub var stack: Stack = undefined;
 
 pub fn init() !void {
-    try parseMap();
-    try expandStack();
+    physical = try Physical.init();
+    virtual = Virtual.init();
+    stack = try Stack.init();
     Log.info("Initialized the memory subsystem.", .{});
-}
-
-fn parseMap() !void {
-    if (memory_map_request.response) |memory_map_response| {
-        const count = memory_map_response.entry_count;
-        Log.debug("Detected {d} entries in the memory map.", .{count});
-
-        const entries = memory_map_response.entries();
-        var usable: u32 = 0;
-        for (entries) |entry| {
-            Log.debug("Found memory map entry of type {s}.", .{@tagName(entry.kind)});
-            if (entry.kind == limine.MemoryMapEntryType.usable) {
-                usable += 1;
-            }
-        }
-
-        Log.debug("Detected {d} usable memory map entries.", .{usable});
-    } else {
-        Log.err("Failed to parse the memory map.", .{});
-        return error.ParsingError;
-    }
-}
-
-fn expandStack() !void {
-    if (stack_size_request.response) |_| {
-        Log.debug("Expanded the kernel stack space to {d} bytes.", .{stack_size_request.stack_size});
-    } else {
-        Log.err("Failed to expand the kernel stack.", .{});
-        return error.StackError;
-    }
 }

@@ -29,7 +29,7 @@ const IO = enum(u16) {
     COM8 = 0x4E8,
 };
 
-pub const Port = struct {
+const Port = struct {
     address: u16,
 
     const Reader = std.io.GenericReader(Port, error{}, read);

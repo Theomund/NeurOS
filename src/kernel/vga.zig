@@ -21,7 +21,7 @@ const std = @import("std");
 
 const Log = std.log.scoped(.vga);
 
-pub export var framebuffer_request: limine.FramebufferRequest = .{};
+export var framebuffer_request: limine.FramebufferRequest = .{};
 
 const Cursor = struct {
     x: usize,

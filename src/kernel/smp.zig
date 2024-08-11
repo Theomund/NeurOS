@@ -19,7 +19,7 @@ const std = @import("std");
 
 const Log = std.log.scoped(.smp);
 
-pub export var smp_request: limine.SmpRequest = .{};
+export var smp_request: limine.SmpRequest = .{};
 
 pub fn init() !void {
     try getCoreCount();
