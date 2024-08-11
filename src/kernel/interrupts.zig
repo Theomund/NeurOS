@@ -48,6 +48,98 @@ const InterruptDescriptorTable = struct {
 
 const InterruptHandler = fn () callconv(.Interrupt) void;
 
+fn divideError() callconv(.Interrupt) void {
+    Log.err("Division error was thrown.", .{});
+}
+
+fn debug() callconv(.Interrupt) void {
+    Log.debug("Debug excepton was thrown.", .{});
+}
+
+fn nmi() callconv(.Interrupt) void {
+    Log.err("NMI exception was thrown.", .{});
+}
+
+fn breakpoint() callconv(.Interrupt) void {
+    Log.warn("Breakpoint exception was thrown.", .{});
+}
+
+fn overflow() callconv(.Interrupt) void {
+    Log.err("Overflow exception was thrown.", .{});
+}
+
+fn boundRange() callconv(.Interrupt) void {
+    Log.err("Bound range exception was thrown.", .{});
+}
+
+fn invalidOpcode() callconv(.Interrupt) void {
+    Log.err("Invalid operation code exception was thrown.", .{});
+}
+
+fn deviceNotAvailable() callconv(.Interrupt) void {
+    Log.err("Device not available exception was thrown.", .{});
+}
+
+fn doubleFault() callconv(.Interrupt) void {
+    Log.err("Double fault exception was thrown.", .{});
+}
+
+fn invalidTSS() callconv(.Interrupt) void {
+    Log.err("Invalid TSS exception was thrown.", .{});
+}
+
+fn segmentNotPresent() callconv(.Interrupt) void {
+    Log.err("Segment not present exception was thrown.", .{});
+}
+
+fn stackSegmentFault() callconv(.Interrupt) void {
+    Log.err("Stack segment fault exception was thrown.", .{});
+}
+
+fn generalProtectionFault() callconv(.Interrupt) void {
+    Log.err("General protection fault exception was thrown.", .{});
+}
+
+fn pageFault() callconv(.Interrupt) void {
+    Log.err("Page fault exception was thrown.", .{});
+}
+
+fn x87FloatingPoint() callconv(.Interrupt) void {
+    Log.err("X87 floating point exception was thrown.", .{});
+}
+
+fn alignmentCheck() callconv(.Interrupt) void {
+    Log.err("Alignment check exception was thrown.", .{});
+}
+
+fn machineCheck() callconv(.Interrupt) void {
+    Log.err("Machine check exception was thrown.", .{});
+}
+
+fn simdFloatingPoint() callconv(.Interrupt) void {
+    Log.err("SIMD floating point exception was thrown.", .{});
+}
+
+fn virtualization() callconv(.Interrupt) void {
+    Log.err("Virtualization exception was thrown.", .{});
+}
+
+fn controlProtection() callconv(.Interrupt) void {
+    Log.err("Control protection exception was thrown.", .{});
+}
+
+fn hypervisorInjection() callconv(.Interrupt) void {
+    Log.err("Hypervisor injection exception was thrown.", .{});
+}
+
+fn vmmCommunication() callconv(.Interrupt) void {
+    Log.err("VMM communication exception was thrown.", .{});
+}
+
+fn security() callconv(.Interrupt) void {
+    Log.err("Security exception was thrown.", .{});
+}
+
 pub fn init() void {
     enable();
     Log.info("Initialized the interrupts subsystem.", .{});
