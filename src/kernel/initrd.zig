@@ -218,3 +218,8 @@ test "Mode Parsing" {
     const mode = try Disk.parseMode("770");
     try std.testing.expectEqualStrings("rwxrwx---", &mode);
 }
+
+test "String Trimming" {
+    const trimmed = Disk.trim("0021\x00");
+    try std.testing.expectEqualStrings("21", trimmed);
+}
