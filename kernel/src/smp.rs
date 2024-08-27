@@ -19,6 +19,8 @@ use crate::logger::{Level, LOGGER};
 use alloc::format;
 use limine::request::SmpRequest;
 
+#[used]
+#[link_section = ".requests"]
 static SMP_REQUEST: SmpRequest = SmpRequest::new();
 
 pub fn initialize() {

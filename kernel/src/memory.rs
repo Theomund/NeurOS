@@ -25,8 +25,16 @@ use x86_64::structures::paging::{
 };
 use x86_64::{PhysAddr, VirtAddr};
 
+#[used]
+#[link_section = ".requests"]
 static STACK_SIZE_REQUEST: StackSizeRequest = StackSizeRequest::new().with_size(0x32000);
+
+#[used]
+#[link_section = ".requests"]
 static MEMORY_MAP_REQUEST: MemoryMapRequest = MemoryMapRequest::new();
+
+#[used]
+#[link_section = ".requests"]
 static HHDM_REQUEST: HhdmRequest = HhdmRequest::new();
 
 static PHYSICAL_MANAGER: Lazy<Mutex<PhysicalManager>> = Lazy::new(|| {

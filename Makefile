@@ -31,10 +31,11 @@ endif
 
 DATA_DIRECTORY := $(shell limine --print-datadir)/
 
+BIN_FOLDER := initrd/bin
 BIOS_FILES := $(addprefix $(DATA_DIRECTORY),limine-bios.sys limine-bios-cd.bin limine-uefi-cd.bin)
-BOOT_CONFIG := bootloader/limine.cfg
+BOOT_CONFIG := bootloader/limine.conf
 EFI_FILES := $(addprefix $(DATA_DIRECTORY),BOOTX64.EFI BOOTIA32.EFI)
-INIT := initrd/bin/init
+INIT := $(BIN_FOLDER)/init
 INITRD := target/initrd.tar
 INITRD_SOURCE := $(shell find initrd)
 INIT_SOURCE := $(shell find userland/init)
@@ -80,6 +81,7 @@ all: $(ISO)
 .PHONY: clean
 clean:
 	cargo clean
+	rm -rf $(BIN_FOLDER)
 
 .PHONY: debug
 debug: $(KERNEL)
@@ -92,7 +94,6 @@ distclean: clean
 .PHONY: format
 format:
 	cargo fmt
-	nix fmt
 
 .PHONY: lint
 lint: $(STYLE)
