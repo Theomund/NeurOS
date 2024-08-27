@@ -17,16 +17,14 @@
 */
 
 OUTPUT_FORMAT(elf64-x86-64)
-OUTPUT_ARCH(i386:x86-64)
 
-ENTRY(_start)
+ENTRY(kmain)
 
 PHDRS
 {
-    text    PT_LOAD    FLAGS((1 << 0) | (1 << 2)) ;
-    rodata  PT_LOAD    FLAGS((1 << 2)) ;
-    data    PT_LOAD    FLAGS((1 << 1) | (1 << 2)) ;
-    dynamic PT_DYNAMIC FLAGS((1 << 1) | (1 << 2)) ;
+    text    PT_LOAD;
+    rodata  PT_LOAD;
+    data    PT_LOAD;
 }
 
 SECTIONS
@@ -37,21 +35,21 @@ SECTIONS
         *(.text .text.*)
     } :text
 
-    . += CONSTANT(MAXPAGESIZE);
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     .rodata : {
         *(.rodata .rodata.*)
     } :rodata
 
-    . += CONSTANT(MAXPAGESIZE);
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     .data : {
         *(.data .data.*)
-    } :data
 
-    .dynamic : {
-        *(.dynamic)
-    } :data :dynamic
+        KEEP(*(.requests_start_marker))
+        KEEP(*(.requests))
+        KEEP(*(.requests_end_marker))
+    } :data
 
     .bss : {
         *(.bss .bss.*)
@@ -59,7 +57,7 @@ SECTIONS
     } :data
 
     /DISCARD/ : {
-        *(.eh_frame)
+        *(.eh_frame*)
         *(.note .note.*)
     }
 }

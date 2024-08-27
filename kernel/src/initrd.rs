@@ -25,6 +25,8 @@ use core::str::{from_utf8, FromStr};
 use limine::request::ModuleRequest;
 use spin::Lazy;
 
+#[used]
+#[link_section = ".requests"]
 static MODULE_REQUEST: ModuleRequest = ModuleRequest::new();
 
 pub static INITRD: Lazy<Initrd> = Lazy::new(Initrd::new);

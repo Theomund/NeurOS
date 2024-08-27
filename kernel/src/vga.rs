@@ -25,6 +25,8 @@ use limine::request::FramebufferRequest;
 use spin::{Lazy, Mutex};
 use x86_64::instructions::interrupts::without_interrupts;
 
+#[used]
+#[link_section = ".requests"]
 static FRAMEBUFFER_REQUEST: FramebufferRequest = FramebufferRequest::new();
 
 pub static VGA: Lazy<Mutex<Vga>> = Lazy::new(|| {

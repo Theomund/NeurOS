@@ -169,37 +169,20 @@ graph BT
 # Development
 
 If you're interested in developing the operating system, follow the outlined
-steps. Make sure you have the necessary tools and dependencies installed on your
-system.
+steps. The instructions assume that you're using the provided development
+container with the editor or IDE of your choosing. See the following websites
+for more information:
 
-## Prerequisites
-
-Before developing, ensure you have Nix installed on your host operating system:
-
-```bash
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
-```
+* https://containers.dev/
+* https://code.visualstudio.com/docs/devcontainers/containers
+* https://www.jetbrains.com/help/rust/connect-to-devcontainer.html
 
 ## Cloning
-
-Spawn an interactive shell that contains the `git` package:
-
-```bash
-nix-shell -p git
-```
 
 Clone the repository to your local machine by using the following command:
 
 ```bash
 git clone https://github.com/Theomund/NeurOS.git
-```
-
-## Developing
-
-To instantiate a development shell, run the following command:
-
-```bash
-nix develop
 ```
 
 ## Compiling

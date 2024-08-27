@@ -53,7 +53,7 @@ use core::panic::PanicInfo;
 use x86_64::instructions;
 
 #[no_mangle]
-extern "C" fn _start() -> ! {
+extern "C" fn kmain() -> ! {
     gdt::initialize();
     memory::initialize();
     interrupts::initialize();

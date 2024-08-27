@@ -17,6 +17,8 @@
 use acpi::{AcpiHandler, AcpiTables, PhysicalMapping};
 use limine::request::RsdpRequest;
 
+#[used]
+#[link_section = ".requests"]
 static RSDP_REQUEST: RsdpRequest = RsdpRequest::new();
 
 #[derive(Clone)]
