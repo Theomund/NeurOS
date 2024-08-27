@@ -32,7 +32,7 @@ RUN dnf install -y \
     xorriso-1.5.6 \
     && dnf clean all
 RUN dnf copr enable -y mczernek/vale \
-    && dnf install -y vale \
+    && dnf install -y vale-3.7.1 \
     && dnf clean all
 RUN useradd -m developer
 USER developer
