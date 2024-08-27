@@ -64,7 +64,7 @@ $(ISO): $(BIOS_FILES) $(EFI_FILES) $(LIMINE) $(KERNEL) $(INITRD)
 $(INIT): $(INIT_SOURCE)
 	cargo build --profile $(PROFILE) --package init
 	mkdir -p initrd/bin
-	cp target/x86_64-unknown-none/$(SUBDIR)/init initrd/bin/
+	cp target/x86_64-unknown-none/$(SUBDIR)/init $(BIN_FOLDER)
 
 $(INITRD): $(INITRD_SOURCE) $(INIT)
 	tar --format ustar -c -f $(INITRD) initrd
