@@ -269,8 +269,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parse_timestamp() {
-        let result = Initrd::parse_timestamp("1704085200");
+    fn debut_timestamp() {
+        let result = File::parse_timestamp("1671476400");
         assert_eq!(result, "2022-12-19 19:00");
     }
 }
