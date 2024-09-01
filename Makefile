@@ -108,3 +108,7 @@ run: $(ISO)
 .PHONY: run-uefi
 run-uefi: $(ISO) $(OVMF)
 	qemu-system-x86_64 $(DEBUG_FLAGS) -M q35 -m 2G -bios $(OVMF) -cdrom $(ISO) -boot d
+
+.PHONY: test
+test:
+	cargo test --profile $(PROFILE)
