@@ -22,7 +22,6 @@ use alloc::vec::Vec;
 use core::fmt::{Display, Formatter};
 use core::ptr::slice_from_raw_parts;
 use core::str::{from_utf8, FromStr};
-use core::time;
 use limine::request::ModuleRequest;
 use spin::Lazy;
 
