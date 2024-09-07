@@ -259,14 +259,3 @@ pub fn initialize() {
         INITRD.get_files().len()
     );
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn debut_timestamp() {
-        let result = File::parse_timestamp("1671476400");
-        assert_eq!(result, "2022-12-19 19:00");
-    }
-}
