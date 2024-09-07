@@ -67,6 +67,65 @@ impl File {
         let execute = if digit & 0b001 == 0b001 { 'x' } else { '-' };
         format!("{read}{write}{execute}")
     }
+
+    fn parse_timestamp(timestamp: u32) -> String {
+        const UNIX_EPOCH_YEAR: u32 = 1970;
+
+        const DAYS_PER_MONTH: [u32; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        const DAYS_PER_LEAP_MONTH: [u32; 12] = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        const DAYS_PER_YEAR: u32 = 365;
+        const DAYS_PER_LEAP_YEAR: u32 = 366;
+
+        const SECONDS_PER_MINUTE: u32 = 60;
+        const SECONDS_PER_HOUR: u32 = SECONDS_PER_MINUTE * 60;
+        const SECONDS_PER_DAY: u32 = SECONDS_PER_HOUR * 24;
+        const SECONDS_PER_YEAR: u32 = SECONDS_PER_DAY * DAYS_PER_YEAR;
+        const SECONDS_PER_LEAP_YEAR: u32 = SECONDS_PER_DAY * DAYS_PER_LEAP_YEAR;
+
+        let mut seconds = timestamp;
+
+        let mut year = UNIX_EPOCH_YEAR;
+        let mut year_seconds = 0;
+
+        let is_leap_year =
+            |year: u32| -> bool { (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0) };
+
+        while seconds > year_seconds {
+            year_seconds = if is_leap_year(year) {
+                SECONDS_PER_LEAP_YEAR
+            } else {
+                SECONDS_PER_YEAR
+            };
+
+            seconds -= year_seconds;
+            year += 1;
+        }
+
+        let mut month = 1;
+        let days_per_month = if is_leap_year(year) {
+            DAYS_PER_LEAP_MONTH
+        } else {
+            DAYS_PER_MONTH
+        };
+
+        while seconds >= days_per_month[month - 1] * SECONDS_PER_DAY {
+            seconds -= days_per_month[month - 1] * SECONDS_PER_DAY;
+            month += 1;
+        }
+
+        let day = (seconds / SECONDS_PER_DAY) + 1;
+        seconds %= SECONDS_PER_DAY;
+
+        let hour = seconds / SECONDS_PER_HOUR;
+        seconds %= SECONDS_PER_HOUR;
+
+        let minute = seconds / SECONDS_PER_MINUTE;
+        seconds %= SECONDS_PER_MINUTE;
+
+        let second = seconds;
+
+        format!("{year}-{month:02}-{day:02} {hour:02}:{minute:02}:{second:02}")
+    }
 }
 
 impl Display for File {
@@ -86,6 +145,7 @@ impl Display for File {
         let group = File::parse_permission(digits[1]);
         let other = File::parse_permission(digits[2]);
         let permissions = format!("{flag}{owner}{group}{other}");
+        let timestamp = File::parse_timestamp(self.header.mtime);
         write!(
             f,
             "{} {}/{} {} {} {}",
@@ -93,7 +153,7 @@ impl Display for File {
             self.header.username,
             self.header.group,
             self.header.size,
-            self.header.mtime,
+            timestamp,
             self.header.name
         )?;
         Ok(())

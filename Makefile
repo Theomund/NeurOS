@@ -43,6 +43,7 @@ ISO := target/NeurOS.iso
 ISO_ROOT := target/iso_root
 KERNEL := target/x86_64-unknown-none/$(SUBDIR)/kernel
 KERNEL_SOURCE := $(shell find kernel)
+OVMF := /usr/share/OVMF/OVMF_CODE.fd
 SOURCE_DATE_EPOCH := $(shell git log -1 --format=%ct)
 STYLE := .github/styles/RedHat
 
@@ -107,3 +108,7 @@ run: $(ISO)
 .PHONY: run-uefi
 run-uefi: $(ISO) $(OVMF)
 	qemu-system-x86_64 $(DEBUG_FLAGS) -M q35 -m 2G -bios $(OVMF) -cdrom $(ISO) -boot d
+
+.PHONY: test
+test:
+	cargo test --profile $(PROFILE)

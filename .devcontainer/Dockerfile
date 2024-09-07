@@ -21,12 +21,13 @@ RUN dnf install -y \
     terra-release-40 \
     && dnf clean all
 RUN dnf install -y \
+    bash-completion-2.11 \
     dnf-plugins-core-4.9.0 \
-    edk2-ovmf-20240524 \
+    edk2-ovmf-20240813 \
     gcc-14.2.1 \
     git-2.46.0 \
     gdb-14.2 \
-    limine-8.0.6 \
+    limine-8.0.9 \
     make-4.4.1 \
     qemu-system-x86-8.2.2 \
     xorriso-1.5.6 \
