@@ -71,8 +71,8 @@ impl File {
     fn parse_timestamp(timestamp: u32) -> String {
         const UNIX_EPOCH_YEAR: u32 = 1970;
 
-        const DAYS_PER_MONTH: [u8; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-        const DAYS_PER_LEAP_MONTH: [u8; 12] = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        const DAYS_PER_MONTH: [u32; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        const DAYS_PER_LEAP_MONTH: [u32; 12] = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
         const DAYS_PER_YEAR: u32 = 365;
         const DAYS_PER_LEAP_YEAR: u32 = 366;
 
@@ -108,26 +108,23 @@ impl File {
             DAYS_PER_MONTH
         };
 
-        while seconds >= (days_per_month[month - 1] as u32) * SECONDS_PER_DAY {
-            seconds -= (days_per_month[month - 1] as u32) * SECONDS_PER_DAY;
+        while seconds >= days_per_month[month - 1] * SECONDS_PER_DAY {
+            seconds -= days_per_month[month - 1] * SECONDS_PER_DAY;
             month += 1;
         }
 
-        let day = (seconds / SECONDS_PER_DAY) as u8 + 1;
+        let day = (seconds / SECONDS_PER_DAY) + 1;
         seconds %= SECONDS_PER_DAY;
 
-        let hour = (seconds / SECONDS_PER_HOUR) as u8;
+        let hour = seconds / SECONDS_PER_HOUR;
         seconds %= SECONDS_PER_HOUR;
 
-        let minute = (seconds / SECONDS_PER_MINUTE) as u8;
+        let minute = seconds / SECONDS_PER_MINUTE;
         seconds %= SECONDS_PER_MINUTE;
 
-        let second = seconds as u8;
+        let second = seconds;
 
-        format!(
-            "{}-{:02}-{:02} {:02}:{:02}:{:02}",
-            year, month, day, hour, minute, second
-        )
+        format!("{year}-{month:02}-{day:02} {hour:02}:{minute:02}:{second:02}")
     }
 }
 
