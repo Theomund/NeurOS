@@ -71,16 +71,16 @@ impl File {
     fn parse_timestamp(timestamp: u32) -> String {
         const UNIX_EPOCH_YEAR: u32 = 1970;
 
+        const DAYS_PER_MONTH: [u8; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        const DAYS_PER_LEAP_MONTH: [u8; 12] = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        const DAYS_PER_YEAR: u32 = 365;
+        const DAYS_PER_LEAP_YEAR: u32 = 366;
+
         const SECONDS_PER_MINUTE: u32 = 60;
         const SECONDS_PER_HOUR: u32 = SECONDS_PER_MINUTE * 60;
         const SECONDS_PER_DAY: u32 = SECONDS_PER_HOUR * 24;
         const SECONDS_PER_YEAR: u32 = SECONDS_PER_DAY * DAYS_PER_YEAR;
         const SECONDS_PER_LEAP_YEAR: u32 = SECONDS_PER_DAY * DAYS_PER_LEAP_YEAR;
-
-        const DAYS_PER_MONTH: [u8; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-        const DAYS_PER_LEAP_MONTH: [u8; 12] = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-        const DAYS_PER_YEAR: u32 = 365;
-        const DAYS_PER_LEAP_YEAR: u32 = 366;
 
         let mut seconds = timestamp;
 
