@@ -37,5 +37,5 @@ RUN dnf copr enable -y mczernek/vale \
     && dnf clean all
 RUN useradd -m developer
 USER developer
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain nightly-2024-08-27 --target x86_64-unknown-none -y
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain nightly-2024-09-08 --target x86_64-unknown-none -y
 ENV PATH="$PATH:$HOME/.cargo/bin"
